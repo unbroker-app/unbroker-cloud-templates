@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "commit": "d3dd2e38b06d059f0d4e6fc3ae897a144628fde3",
-  "generatedAt": "2026-10-14T19:22:14.728Z",
+  "commit": "44e432d7bfc48e2827ed2dc4f8250d04bb5575b8",
+  "generatedAt": "2026-10-14T21:15:01.381Z",
   "templates": [
     {
       "slug": "directus",
@@ -66,7 +66,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/directus/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/directus/logo.svg",
       "readme": "# Directus\n\nTurns a SQL database into an instant REST and GraphQL API, with a no-code app\nto manage content, users, files and permissions.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Directus** | `directus/directus:12.5.0` | Public. Admin app at `/admin`. 1 GiB volume for uploaded files |\n| **db** | PostgreSQL 16 | Internal. Your data model and content |\n\n## After deploy\n\nOpen `<your-url>/admin` and sign in with the **admin email and password** from\nthe deploy form.\n\n## Notes\n\nDirectus uses the Business Source License: it is free for organizations under\nUSD 5M in annual revenue. Check [their license](https://directus.io/bsl) for\nanything beyond that.\n"
     },
     {
@@ -129,7 +129,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/flowise/logo.png",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/flowise/logo.png",
       "readme": "# Flowise\n\nBuild AI agents, chatbots and RAG pipelines with drag-and-drop nodes for every\nmajor LLM, vector store and tool, then call them over an API or embed them on a\nsite.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Flowise** | `flowiseai/flowise:3.1.4` | Public. 1 GiB volume for uploaded documents and logs |\n| **db** | PostgreSQL 16 | Internal. Chatflows, credentials and users |\n\nThe secrets Flowise uses to sign sessions and encrypt stored API keys are\ngenerated for you.\n\n## After deploy\n\nOpen the URL and create the **admin account**. The first visitor gets it.\nThen add your model provider's API key under **Credentials**.\n\n## Notes\n\nOn this release a few node types (the ReAct agent nodes and AWS Bedrock) fail to\nload because of upstream packaging issues. Every other node works.\n"
     },
     {
@@ -178,7 +178,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/ghost/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/ghost/logo.svg",
       "readme": "# Ghost\n\nA professional publishing platform: a modern editor, newsletters, paid\nmemberships and themes.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Ghost** | `ghost:6.70.0` | Public. 1 GiB volume for themes, images and uploads |\n| **db** | MySQL 8 | Internal. Posts, members and settings |\n\n## After deploy\n\nGo to `<your-url>/ghost` and create the **owner account**. The first visitor to\nthat page gets it, so do this right away.\n\n## Notes\n\n- **Email.** Staff invites, password resets and newsletters need an SMTP or\n  Mailgun account. Ghost reads its config from lowercase variables, so add yours\n  to the `export …` line of the service's start command, e.g.\n  `mail__transport=SMTP mail__options__host=…`.\n- **Custom domain.** Ghost builds every link from its `url`. After you add a\n  domain, set `GHOST_URL` to it and redeploy.\n"
     },
     {
@@ -218,7 +218,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/memos/logo.png",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/memos/logo.png",
       "readme": "# Memos\n\nA lightweight, privacy-first place for notes: write in Markdown, tag, search,\nand share individual memos.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Memos** | `neosmemo/memos:0.31.0` | Public. 1 GiB volume for notes (SQLite) and attachments |\n\n## After deploy\n\nOpen the URL and **sign up**. The first account becomes the admin. Then go to\n**Settings → System** and disable open sign-ups unless you want them.\n"
     },
     {
@@ -273,7 +273,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/miniflux/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/miniflux/logo.svg",
       "readme": "# Miniflux\n\nA minimalist, fast feed reader: RSS, Atom and JSON Feed, keyboard shortcuts,\nfull-text fetching, and a REST API, with no tracking and no clutter.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Miniflux** | `miniflux/miniflux:2.3.3` | Public. Migrations run on boot |\n| **db** | PostgreSQL 16 | Internal. Feeds, entries and users |\n\n## After deploy\n\nSign in with the **admin username and password** you entered in the deploy\nform. Add more users under **Settings → Users**.\n\nTo use a mobile or desktop client (Fever or Google Reader API), enable it under\n**Settings → Integrations**.\n"
     },
     {
@@ -339,7 +339,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/n8n/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/n8n/logo.svg",
       "readme": "# n8n\n\nWorkflow automation you host yourself: connect 400+ apps and APIs, run code\nsteps, and build AI agents on a visual canvas.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **n8n** | `n8nio/n8n:2.44.1` | Public. Editor, webhooks and the API on one URL. 1 GiB volume for credentials files and community nodes |\n| **db** | PostgreSQL 16 | Internal. Workflows, executions and users |\n\n`N8N_ENCRYPTION_KEY` is generated for you. Every credential n8n stores is\nencrypted with it, so **don't change or delete it**. If you lose it, the stored\ncredentials become unreadable.\n\n## After deploy\n\n1. Open the service URL. n8n asks you to create the **owner account**, and the\n   first person to open the URL gets it, so do this right away.\n2. Webhook URLs already point at the public address (`WEBHOOK_URL`). If you\n   add a custom domain, update `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` to match.\n\n## Notes\n\n- Schedule and polling triggers run inside the n8n process, so keep the\n  service running if you rely on them.\n- Large workflows can need more memory. Raise the limit in the service's\n  **Scale** tab.\n"
     },
     {
@@ -377,7 +377,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/uptime-kuma/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/uptime-kuma/logo.svg",
       "readme": "# Uptime Kuma\n\nA friendly self-hosted monitoring tool. It checks HTTP(s), TCP, ping, DNS,\nDocker and more, can publish public status pages, and sends alerts to 90+\nnotification services.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Uptime Kuma** | `louislam/uptime-kuma:2.5.6` | Public. 1 GiB volume for its database and settings |\n\n## After deploy\n\n1. Open the URL. On first launch Uptime Kuma asks which database to use: pick\n   **SQLite**. It lives on the service's volume.\n2. Create the admin account. The first visitor gets it, so do this right away.\n3. Add monitors, then share a status page if you want one.\n\n## Notes\n\nUptime Kuma checks from inside the platform, so keep the service running for\nyour monitors to keep firing.\n"
     },
     {
@@ -428,7 +428,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@d3dd2e38b06d059f0d4e6fc3ae897a144628fde3/templates/vaultwarden/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@44e432d7bfc48e2827ed2dc4f8250d04bb5575b8/templates/vaultwarden/logo.svg",
       "readme": "# Vaultwarden\n\nA lightweight server that speaks the Bitwarden API, so the official Bitwarden\napps, browser extensions and CLI work against it.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Vaultwarden** | `vaultwarden/server:1.37.4` | Public. 1 GiB volume for the vault database (SQLite), attachments and keys |\n\n## After deploy\n\n1. Open the URL and **create your account**.\n2. Turn off public signups: set `SIGNUPS_ALLOWED` to `false` in the service's\n   variables and redeploy.\n3. In any Bitwarden app, pick **Self-hosted** and enter the service URL as the\n   server.\n\nThe admin panel lives at `/admin`, behind the `ADMIN_TOKEN` you chose at\ndeploy. Service variables are write-only, so keep a copy: to change it, set a\nnew `ADMIN_TOKEN` and redeploy. Deleting the variable turns the panel off.\n\n## Notes\n\nVaultwarden is an independent project, not affiliated with Bitwarden, Inc.\nBack up the volume: it is your vault.\n"
     }
   ]
