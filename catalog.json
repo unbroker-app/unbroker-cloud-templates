@@ -1,0 +1,431 @@
+{
+  "version": 1,
+  "commit": "918ce531f718697327c7c43a113d1d23cb32a569",
+  "generatedAt": "2026-10-14T16:40:49.625Z",
+  "templates": [
+    {
+      "slug": "directus",
+      "name": "Directus",
+      "tagline": "Instant REST and GraphQL API with a no-code admin app for any SQL database",
+      "category": "backend",
+      "tags": [
+        "headless-cms",
+        "api",
+        "graphql",
+        "admin"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://directus.io",
+        "source": "https://github.com/directus/directus",
+        "docs": "https://directus.io/docs/self-hosting/overview"
+      },
+      "variables": {
+        "ADMIN_EMAIL": {
+          "description": "Email of the first admin user — you sign in with it.",
+          "required": true
+        },
+        "ADMIN_PASSWORD": {
+          "description": "Password for that admin user.",
+          "required": true
+        }
+      },
+      "services": {
+        "db": {
+          "preset": "postgres",
+          "volumeSizeGb": 1,
+          "env": {
+            "POSTGRES_DB": "directus"
+          }
+        },
+        "directus": {
+          "name": "Directus",
+          "image": "directus/directus:12.5.0",
+          "port": 8055,
+          "public": true,
+          "healthcheck": "/server/ping",
+          "volume": {
+            "path": "/directus/uploads",
+            "sizeGb": 1
+          },
+          "env": {
+            "SECRET": "${{secret(48)}}",
+            "PUBLIC_URL": "${{services.directus.url}}",
+            "DB_CLIENT": "pg",
+            "DB_HOST": "${{services.db.host}}",
+            "DB_PORT": "${{services.db.port}}",
+            "DB_DATABASE": "directus",
+            "DB_USER": "postgres",
+            "DB_PASSWORD": "${{services.db.env.POSTGRES_PASSWORD}}",
+            "ADMIN_EMAIL": "${{vars.ADMIN_EMAIL}}",
+            "ADMIN_PASSWORD": "${{vars.ADMIN_PASSWORD}}",
+            "STORAGE_LOCATIONS": "local",
+            "STORAGE_LOCAL_ROOT": "/directus/uploads",
+            "TELEMETRY": "false"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/directus/logo.svg",
+      "readme": "# Directus\n\nTurns a SQL database into an instant REST and GraphQL API, with a no-code app\nto manage content, users, files and permissions.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Directus** | `directus/directus:12.5.0` | Public. Admin app at `/admin`. 1 GiB volume for uploaded files |\n| **db** | PostgreSQL 16 | Internal. Your data model and content |\n\n## After deploy\n\nOpen `<your-url>/admin` and sign in with the **admin email and password** from\nthe deploy form.\n\n## Notes\n\nDirectus uses the Business Source License: it is free for organizations under\nUSD 5M in annual revenue. Check [their license](https://directus.io/bsl) for\nanything beyond that.\n"
+    },
+    {
+      "slug": "flowise",
+      "name": "Flowise",
+      "tagline": "Build AI agents and LLM workflows visually",
+      "category": "ai",
+      "tags": [
+        "ai",
+        "agents",
+        "llm",
+        "rag",
+        "low-code"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://flowiseai.com",
+        "source": "https://github.com/FlowiseAI/Flowise",
+        "docs": "https://docs.flowiseai.com"
+      },
+      "variables": {},
+      "services": {
+        "db": {
+          "preset": "postgres",
+          "volumeSizeGb": 1,
+          "env": {
+            "POSTGRES_DB": "flowise"
+          }
+        },
+        "flowise": {
+          "name": "Flowise",
+          "image": "flowiseai/flowise:3.1.4",
+          "port": 3000,
+          "public": true,
+          "healthcheck": "/api/v1/ping",
+          "volume": {
+            "path": "/data",
+            "sizeGb": 1
+          },
+          "env": {
+            "SHELL": "/bin/sh",
+            "PORT": "3000",
+            "DATABASE_TYPE": "postgres",
+            "DATABASE_HOST": "${{services.db.host}}",
+            "DATABASE_PORT": "${{services.db.port}}",
+            "DATABASE_NAME": "flowise",
+            "DATABASE_USER": "postgres",
+            "DATABASE_PASSWORD": "${{services.db.env.POSTGRES_PASSWORD}}",
+            "SECRETKEY_PATH": "/data",
+            "BLOB_STORAGE_PATH": "/data/storage",
+            "LOG_PATH": "/data/logs",
+            "FLOWISE_SECRETKEY_OVERWRITE": "${{secret(48)}}",
+            "JWT_AUTH_TOKEN_SECRET": "${{secret(48)}}",
+            "JWT_REFRESH_TOKEN_SECRET": "${{secret(48)}}",
+            "EXPRESS_SESSION_SECRET": "${{secret(48)}}",
+            "TOKEN_HASH_SECRET": "${{secret(48)}}",
+            "APP_URL": "${{services.flowise.url}}",
+            "DISABLE_FLOWISE_TELEMETRY": "true"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/flowise/logo.png",
+      "readme": "# Flowise\n\nBuild AI agents, chatbots and RAG pipelines with drag-and-drop nodes for every\nmajor LLM, vector store and tool, then call them over an API or embed them on a\nsite.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Flowise** | `flowiseai/flowise:3.1.4` | Public. 1 GiB volume for uploaded documents and logs |\n| **db** | PostgreSQL 16 | Internal. Chatflows, credentials and users |\n\nThe secrets Flowise uses to sign sessions and encrypt stored API keys are\ngenerated for you.\n\n## After deploy\n\nOpen the URL and create the **admin account**. The first visitor gets it.\nThen add your model provider's API key under **Credentials**.\n\n## Notes\n\nOn this release a few node types (the ReAct agent nodes and AWS Bedrock) fail to\nload because of upstream packaging issues. Every other node works.\n"
+    },
+    {
+      "slug": "ghost",
+      "name": "Ghost",
+      "tagline": "Publishing platform for blogs, newsletters and memberships",
+      "category": "cms",
+      "tags": [
+        "blog",
+        "cms",
+        "newsletter",
+        "publishing"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://ghost.org",
+        "source": "https://github.com/TryGhost/Ghost",
+        "docs": "https://ghost.org/docs/"
+      },
+      "variables": {},
+      "services": {
+        "db": {
+          "preset": "mysql",
+          "volumeSizeGb": 1,
+          "env": {
+            "MYSQL_DATABASE": "ghost"
+          }
+        },
+        "ghost": {
+          "name": "Ghost",
+          "image": "ghost:6.70.0",
+          "port": 2368,
+          "public": true,
+          "startCommand": "export url=\"$GHOST_URL\" database__client=mysql database__connection__host=\"$DB_HOST\" database__connection__port=\"$DB_PORT\" database__connection__user=root database__connection__password=\"$DB_PASSWORD\" database__connection__database=ghost server__host=0.0.0.0 server__port=2368; exec docker-entrypoint.sh node current/index.js",
+          "healthcheck": "/ghost/api/admin/site/",
+          "volume": {
+            "path": "/var/lib/ghost/content",
+            "sizeGb": 1
+          },
+          "env": {
+            "GHOST_URL": "${{services.ghost.url}}",
+            "DB_HOST": "${{services.db.host}}",
+            "DB_PORT": "${{services.db.port}}",
+            "DB_PASSWORD": "${{services.db.env.MYSQL_ROOT_PASSWORD}}"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/ghost/logo.svg",
+      "readme": "# Ghost\n\nA professional publishing platform: a modern editor, newsletters, paid\nmemberships and themes.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Ghost** | `ghost:6.70.0` | Public. 1 GiB volume for themes, images and uploads |\n| **db** | MySQL 8 | Internal. Posts, members and settings |\n\n## After deploy\n\nGo to `<your-url>/ghost` and create the **owner account**. The first visitor to\nthat page gets it, so do this right away.\n\n## Notes\n\n- **Email.** Staff invites, password resets and newsletters need an SMTP or\n  Mailgun account. Ghost reads its config from lowercase variables, so add yours\n  to the `export …` line of the service's start command, e.g.\n  `mail__transport=SMTP mail__options__host=…`.\n- **Custom domain.** Ghost builds every link from its `url`. After you add a\n  domain, set `GHOST_URL` to it and redeploy.\n"
+    },
+    {
+      "slug": "memos",
+      "name": "Memos",
+      "tagline": "Lightweight, privacy-first note-taking",
+      "category": "productivity",
+      "tags": [
+        "notes",
+        "markdown",
+        "journal"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://usememos.com",
+        "source": "https://github.com/usememos/memos",
+        "docs": "https://usememos.com/docs"
+      },
+      "variables": {},
+      "services": {
+        "memos": {
+          "name": "Memos",
+          "image": "neosmemo/memos:0.31.0",
+          "port": 5230,
+          "public": true,
+          "healthcheck": "/healthz",
+          "volume": {
+            "path": "/var/opt/memos",
+            "sizeGb": 1
+          },
+          "env": {
+            "MEMOS_MODE": "prod",
+            "MEMOS_PORT": "5230",
+            "MEMOS_DATA": "/var/opt/memos",
+            "MEMOS_INSTANCE_URL": "${{services.memos.url}}"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/memos/logo.png",
+      "readme": "# Memos\n\nA lightweight, privacy-first place for notes: write in Markdown, tag, search,\nand share individual memos.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Memos** | `neosmemo/memos:0.31.0` | Public. 1 GiB volume for notes (SQLite) and attachments |\n\n## After deploy\n\nOpen the URL and **sign up**. The first account becomes the admin. Then go to\n**Settings → System** and disable open sign-ups unless you want them.\n"
+    },
+    {
+      "slug": "miniflux",
+      "name": "Miniflux",
+      "tagline": "Minimalist, opinionated feed reader",
+      "category": "productivity",
+      "tags": [
+        "rss",
+        "reader",
+        "news"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://miniflux.app",
+        "source": "https://github.com/miniflux/v2",
+        "docs": "https://miniflux.app/docs/"
+      },
+      "variables": {
+        "ADMIN_USERNAME": {
+          "description": "Username for the first admin account.",
+          "required": true,
+          "default": "admin"
+        },
+        "ADMIN_PASSWORD": {
+          "description": "Password for that account (at least 6 characters). It is all that stands between the public URL and your feeds, so pick a strong one.",
+          "required": true
+        }
+      },
+      "services": {
+        "db": {
+          "preset": "postgres",
+          "volumeSizeGb": 1,
+          "env": {
+            "POSTGRES_DB": "miniflux"
+          }
+        },
+        "miniflux": {
+          "name": "Miniflux",
+          "image": "miniflux/miniflux:2.3.3",
+          "port": 8080,
+          "public": true,
+          "healthcheck": "/healthcheck",
+          "env": {
+            "DATABASE_URL": "postgres://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/miniflux?sslmode=disable",
+            "RUN_MIGRATIONS": "1",
+            "CREATE_ADMIN": "1",
+            "ADMIN_USERNAME": "${{vars.ADMIN_USERNAME}}",
+            "ADMIN_PASSWORD": "${{vars.ADMIN_PASSWORD}}",
+            "BASE_URL": "${{services.miniflux.url}}"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/miniflux/logo.svg",
+      "readme": "# Miniflux\n\nA minimalist, fast feed reader: RSS, Atom and JSON Feed, keyboard shortcuts,\nfull-text fetching, and a REST API, with no tracking and no clutter.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Miniflux** | `miniflux/miniflux:2.3.3` | Public. Migrations run on boot |\n| **db** | PostgreSQL 16 | Internal. Feeds, entries and users |\n\n## After deploy\n\nSign in with the **admin username and password** you entered in the deploy\nform. Add more users under **Settings → Users**.\n\nTo use a mobile or desktop client (Fever or Google Reader API), enable it under\n**Settings → Integrations**.\n"
+    },
+    {
+      "slug": "n8n",
+      "name": "n8n",
+      "tagline": "Workflow automation with 400+ integrations and AI agents",
+      "category": "automation",
+      "tags": [
+        "workflows",
+        "automation",
+        "ai",
+        "integrations"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://n8n.io",
+        "source": "https://github.com/n8n-io/n8n",
+        "docs": "https://docs.n8n.io/hosting/"
+      },
+      "variables": {
+        "TIMEZONE": {
+          "description": "Timezone schedule triggers run in, e.g. America/Argentina/Buenos_Aires.",
+          "required": false,
+          "default": "UTC"
+        }
+      },
+      "services": {
+        "db": {
+          "preset": "postgres",
+          "volumeSizeGb": 1,
+          "env": {
+            "POSTGRES_DB": "n8n"
+          }
+        },
+        "n8n": {
+          "name": "n8n",
+          "image": "n8nio/n8n:2.44.1",
+          "port": 5678,
+          "public": true,
+          "healthcheck": "/healthz",
+          "volume": {
+            "path": "/data",
+            "sizeGb": 1
+          },
+          "env": {
+            "N8N_USER_FOLDER": "/data",
+            "DB_TYPE": "postgresdb",
+            "DB_POSTGRESDB_HOST": "${{services.db.host}}",
+            "DB_POSTGRESDB_PORT": "${{services.db.port}}",
+            "DB_POSTGRESDB_DATABASE": "n8n",
+            "DB_POSTGRESDB_USER": "postgres",
+            "DB_POSTGRESDB_PASSWORD": "${{services.db.env.POSTGRES_PASSWORD}}",
+            "N8N_ENCRYPTION_KEY": "${{secret(48)}}",
+            "N8N_PORT": "5678",
+            "WEBHOOK_URL": "${{services.n8n.url}}",
+            "N8N_EDITOR_BASE_URL": "${{services.n8n.url}}",
+            "N8N_PROXY_HOPS": "1",
+            "GENERIC_TIMEZONE": "${{vars.TIMEZONE}}",
+            "TZ": "${{vars.TIMEZONE}}",
+            "N8N_DIAGNOSTICS_ENABLED": "false",
+            "N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS": "true"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/n8n/logo.svg",
+      "readme": "# n8n\n\nWorkflow automation you host yourself: connect 400+ apps and APIs, run code\nsteps, and build AI agents on a visual canvas.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **n8n** | `n8nio/n8n:2.44.1` | Public. Editor, webhooks and the API on one URL. 1 GiB volume for credentials files and community nodes |\n| **db** | PostgreSQL 16 | Internal. Workflows, executions and users |\n\n`N8N_ENCRYPTION_KEY` is generated for you. Every credential n8n stores is\nencrypted with it, so **don't change or delete it**. If you lose it, the stored\ncredentials become unreadable.\n\n## After deploy\n\n1. Open the service URL. n8n asks you to create the **owner account**, and the\n   first person to open the URL gets it, so do this right away.\n2. Webhook URLs already point at the public address (`WEBHOOK_URL`). If you\n   add a custom domain, update `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` to match.\n\n## Notes\n\n- Schedule and polling triggers run inside the n8n process, so keep the\n  service running if you rely on them.\n- Large workflows can need more memory. Raise the limit in the service's\n  **Scale** tab.\n"
+    },
+    {
+      "slug": "uptime-kuma",
+      "name": "Uptime Kuma",
+      "tagline": "Self-hosted uptime monitoring with status pages and alerts",
+      "category": "monitoring",
+      "tags": [
+        "uptime",
+        "monitoring",
+        "status-page",
+        "alerts"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://uptime.kuma.pet",
+        "source": "https://github.com/louislam/uptime-kuma",
+        "docs": "https://github.com/louislam/uptime-kuma/wiki"
+      },
+      "variables": {},
+      "services": {
+        "uptime-kuma": {
+          "name": "Uptime Kuma",
+          "image": "louislam/uptime-kuma:2.5.6",
+          "port": 3001,
+          "public": true,
+          "volume": {
+            "path": "/data",
+            "sizeGb": 1
+          },
+          "env": {
+            "DATA_DIR": "/data/",
+            "UPTIME_KUMA_PORT": "3001"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/uptime-kuma/logo.svg",
+      "readme": "# Uptime Kuma\n\nA friendly self-hosted monitoring tool. It checks HTTP(s), TCP, ping, DNS,\nDocker and more, can publish public status pages, and sends alerts to 90+\nnotification services.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Uptime Kuma** | `louislam/uptime-kuma:2.5.6` | Public. 1 GiB volume for its database and settings |\n\n## After deploy\n\n1. Open the URL. On first launch Uptime Kuma asks which database to use: pick\n   **SQLite**. It lives on the service's volume.\n2. Create the admin account. The first visitor gets it, so do this right away.\n3. Add monitors, then share a status page if you want one.\n\n## Notes\n\nUptime Kuma checks from inside the platform, so keep the service running for\nyour monitors to keep firing.\n"
+    },
+    {
+      "slug": "vaultwarden",
+      "name": "Vaultwarden",
+      "tagline": "Bitwarden-compatible password manager server",
+      "category": "productivity",
+      "tags": [
+        "passwords",
+        "security",
+        "bitwarden"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://github.com/dani-garcia/vaultwarden",
+        "source": "https://github.com/dani-garcia/vaultwarden",
+        "docs": "https://github.com/dani-garcia/vaultwarden/wiki"
+      },
+      "variables": {
+        "SIGNUPS_ALLOWED": {
+          "description": "Let anyone with the link create an account. Create yours, then set this to false on the service and redeploy.",
+          "required": false,
+          "default": "true"
+        }
+      },
+      "services": {
+        "vaultwarden": {
+          "name": "Vaultwarden",
+          "image": "vaultwarden/server:1.37.4",
+          "port": 8080,
+          "public": true,
+          "healthcheck": "/alive",
+          "volume": {
+            "path": "/data",
+            "sizeGb": 1
+          },
+          "env": {
+            "DATA_FOLDER": "/data",
+            "ROCKET_PORT": "8080",
+            "DOMAIN": "${{services.vaultwarden.url}}",
+            "SIGNUPS_ALLOWED": "${{vars.SIGNUPS_ALLOWED}}",
+            "ADMIN_TOKEN": "${{secret(48)}}"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@918ce531f718697327c7c43a113d1d23cb32a569/templates/vaultwarden/logo.svg",
+      "readme": "# Vaultwarden\n\nA lightweight server that speaks the Bitwarden API, so the official Bitwarden\napps, browser extensions and CLI work against it.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Vaultwarden** | `vaultwarden/server:1.37.4` | Public. 1 GiB volume for the vault database (SQLite), attachments and keys |\n\n## After deploy\n\n1. Open the URL and **create your account**.\n2. Turn off public signups: set `SIGNUPS_ALLOWED` to `false` in the service's\n   variables and redeploy.\n3. In any Bitwarden app, pick **Self-hosted** and enter the service URL as the\n   server.\n\nThe admin panel lives at `/admin`. Its token is the generated `ADMIN_TOKEN`\nvariable on the service.\n\n## Notes\n\nVaultwarden is an independent project, not affiliated with Bitwarden, Inc.\nBack up the volume: it is your vault.\n"
+    }
+  ]
+}
