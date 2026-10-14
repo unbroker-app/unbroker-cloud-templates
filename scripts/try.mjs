@@ -103,6 +103,8 @@ for (const [name, svc] of Object.entries(template.services)) {
     };
   }
   if (specs[name].public) specs[name].hostPort = await freePort();
+  specs[name].cpuLimit = svc.cpuLimit;
+  specs[name].memoryLimit = svc.memoryLimit;
 }
 
 // Resolve references, now that every service's env and address is known.
@@ -131,6 +133,8 @@ for (const name of order) {
   // database is ready recovers the same way it would in the cluster.
   const args = ["run", "-d", "--name", id, "--network", net, "--restart", "on-failure:10"];
   args.push("--user", `${s.uid}:${s.uid}`, "--cap-drop", "ALL", "--security-opt", "no-new-privileges");
+  if (s.cpuLimit != null) args.push("--cpus", String(s.cpuLimit / 1000));
+  if (s.memoryLimit != null) args.push("--memory", `${s.memoryLimit}m`, "--memory-swap", `${s.memoryLimit}m`);
   args.push("--tmpfs", `/tmp:size=256m,uid=${s.uid},gid=${s.uid},mode=1777`);
   if (s.volumePath) {
     const vol = `${id}-data`;

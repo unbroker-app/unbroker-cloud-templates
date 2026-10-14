@@ -52,6 +52,8 @@ services:
     name: Miniflux
     image: miniflux/miniflux:2.3.3   # always pin a version
     port: 8080
+    cpuLimit: 500             # optional per-replica limit in millicores (100–2000)
+    memoryLimit: 512          # optional per-replica limit in MiB (128–6144)
     public: true              # gets a public HTTPS URL
     healthcheck: /healthcheck # must answer 2xx/3xx once the app is ready
     volume:                   # optional persistent disk

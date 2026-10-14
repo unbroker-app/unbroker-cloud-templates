@@ -14,6 +14,8 @@ services:
     name: Kev
     image: ghcr.io/unbroker-app/kev-container:sha-20e5eec295c6a6a338ac87e663628ce111511d9f
     port: 8009
+    cpuLimit: 2000
+    memoryLimit: 6144
     public: true
     healthcheck: /healthz
     volume:

@@ -48,10 +48,15 @@ const image = z
   )
   .refine((v) => !/:latest$/.test(v), "pin a version instead of :latest");
 const sizeGb = z.number().int().min(1).max(50);
+const resourceLimits = {
+  cpuLimit: z.number().int().min(100).max(2000).nullable().optional(),
+  memoryLimit: z.number().int().min(128).max(6144).nullable().optional(),
+};
 
 const presetService = z
   .object({
     preset: z.enum(PRESETS),
+    ...resourceLimits,
     name: serviceName.optional(),
     volumeSizeGb: sizeGb.default(1),
     env: env.default({}),
@@ -62,6 +67,7 @@ const imageService = z
   .object({
     name: serviceName.optional(),
     image,
+    ...resourceLimits,
     port: z.number().int().positive().max(65535),
     public: z.boolean().default(false),
     startCommand: z

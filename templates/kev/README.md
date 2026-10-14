@@ -10,9 +10,9 @@ to fixed revisions. A 10 GiB volume stores the downloaded model and cache.
 The container is maintained at [unbroker-app/kev-container](https://github.com/unbroker-app/kev-container);
 inference code comes from [Kev](https://github.com/jaredpalmer/kev).
 
-Use a service with at least **6 GiB RAM and 2 CPUs** as the initial sizing target.
-The template format cannot reserve CPU or memory; check the service's resources
-before deployment. First boot downloads several gigabytes from Hugging Face and
+The template configures **6 GiB RAM and 2 vCPUs per replica** automatically.
+These configured limits are billed while the replica runs.
+First boot downloads several gigabytes from Hugging Face and
 can take several minutes. Keep the volume so restarts can reuse the weights.
 
 ## After deploy
