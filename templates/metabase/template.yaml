@@ -27,8 +27,8 @@ services:
     port: 3000
     public: true
     healthcheck: /api/health
-    # Database drivers Metabase unpacks on boot. Questions, dashboards and users
-    # live in Postgres.
+    # Database drivers Metabase unpacks on boot, and the native libraries they
+    # load (/tmp is noexec). Questions, dashboards and users live in Postgres.
     volume:
       path: /data
       sizeGb: 1
@@ -37,7 +37,7 @@ services:
     # ADMIN_PASSWORD; if Metabase rejects them, it stops the container so the
     # setup page never sits open on a public URL. Once set up, it does nothing.
     startCommand: >-
-      mkdir -p /data/plugins;
+      mkdir -p /data/plugins /data/native;
       ( u=http://127.0.0.1:3000; until p=$(curl -sf $u/api/session/properties); do sleep 2; done;
       t=$(printf %s "$p" | sed -n 's/.*"setup-token":"\([^"]*\)".*/\1/p');
       if [ -n "$t" ]; then
@@ -60,6 +60,9 @@ services:
       MB_ENCRYPTION_SECRET_KEY: ${{secret(48)}}
       MB_SITE_URL: ${{services.metabase.url}}
       MB_PLUGINS_DIR: /data/plugins
+      # The SQLite driver (the sample database) unpacks a native library before
+      # loading it; /tmp is mounted noexec.
+      JAVA_OPTS: -Dorg.sqlite.tmpdir=/data/native
       MB_JETTY_PORT: "3000"
       MB_ANON_TRACKING_ENABLED: "false"
       MB_CHECK_FOR_UPDATES: "false"
