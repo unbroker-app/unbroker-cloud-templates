@@ -21,9 +21,9 @@ async function adminLogin({ http, assert }) {
   assert(res.status === 302 && to && !/\/login(\?|$)/.test(to), `admin signs in (got ${res.status} → ${to})`);
 }
 
-function installedAt({ exec, env }) {
-  const pw = env("db").MYSQL_ROOT_PASSWORD;
-  return exec("db", ["mysql", "-uroot", `-p${pw}`, "-N", "-e", "SELECT MIN(date_add) FROM prestashop.ps_configuration"]).trim();
+// cookie_key is random per installation and lives on the volume.
+function installedAt({ exec }) {
+  return exec("prestashop", ["sh", "-c", "grep -o \"'cookie_key' => '[^']*'\" /var/www/html/app/config/parameters.php"]).trim();
 }
 
 export async function setup(ctx) {
@@ -35,9 +35,10 @@ export async function setup(ctx) {
     assert(r.status === 404, `${path} is gone (got ${r.status})`);
   }
   await adminLogin(ctx);
-  exec("prestashop", ["sh", "-c", "echo e2e-marker > /var/www/html/img/e2e-marker.txt"]);
+  exec("prestashop", ["sh", "-c", "echo e2e-marker > /var/www/html/img/e2e-marker.jpg"]);
   const at = installedAt(ctx);
-  log(`installed at ${at}`);
+  assert(at.length > 20, `cookie_key found (got ${at})`);
+  log("installation identified by its cookie_key");
   return { at };
 }
 
@@ -46,7 +47,7 @@ export async function verify(ctx, { at }) {
   const home = await http("prestashop", "/");
   assert(home.status === 200 && home.text.includes("E2E Store"), `store front answers (got ${home.status})`);
   assert(installedAt(ctx) === at, "same installation (no reinstall)");
-  const marker = await http("prestashop", "/img/e2e-marker.txt");
+  const marker = await http("prestashop", "/img/e2e-marker.jpg");
   assert(marker.text.trim() === "e2e-marker", `file on the volume still served (got ${marker.status})`);
   await adminLogin(ctx);
 }
