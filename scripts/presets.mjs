@@ -9,7 +9,8 @@
 // MONGO_INITDB_ROOT_PASSWORD, MYSQL_ROOT_PASSWORD.
 export const PRESETS = {
   postgres: (pw) => ({
-    image: "postgres:16",
+    // postgres:16 plus the pgvector extension (unbroker-app/unbroker-cloud#677).
+    image: "pgvector/pgvector:pg16",
     port: 5432,
     volumePath: "/var/lib/postgresql/data",
     startCommand:
