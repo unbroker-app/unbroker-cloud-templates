@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -70 528 528">
+  <style>
+    g { fill: #000; stroke: #000; }
+    rect { fill: #fff; }
+    @media (prefers-color-scheme: dark) {
+      g { fill: #fff; stroke: #fff; }
+      rect { fill: #000; }
+    }
+  </style>
+  <rect x="-50" y="-70" width="528" height="528"/>
+  <g><circle cx="214.15" cy="181" r="171" fill="none" stroke-miterlimit="10" stroke-width="20"/><path stroke="none" d="M413 134.11H15.29a15 15 0 0 0-15 15v15.3C.12 168 0 171.52 0 175.11c0 118.19 95.81 214 214 214 116.4 0 211.1-92.94 213.93-208.67 0-.44.07-.88.07-1.33v-30a15 15 0 0 0-15-15Z"/></g>
+</svg>
