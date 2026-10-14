@@ -39,6 +39,10 @@ services:
       PAPERCLIP_DEPLOYMENT_MODE: authenticated
       PAPERCLIP_DEPLOYMENT_EXPOSURE: public
       PAPERCLIP_PUBLIC_URL: ${{services.paperclip.url}}
+      # Paperclip rewrites a localhost public URL to its own port, which leaves
+      # the real origin untrusted when the app runs locally (npm run try).
+      # Naming it here changes nothing on a real hostname.
+      BETTER_AUTH_TRUSTED_ORIGINS: ${{services.paperclip.url}}
       BETTER_AUTH_SECRET: ${{secret(64)}}
       # Encrypts the API keys and secrets you give your agents.
       PAPERCLIP_SECRETS_MASTER_KEY: ${{secret(32)}}
