@@ -14,6 +14,9 @@ variables:
     description: Let anyone with the link create an account. Create yours, then set this to false on the service and redeploy.
     required: false
     default: "true"
+  ADMIN_TOKEN:
+    description: Password for the /admin panel (use a long random one). Saved write-only on the service, so keep a copy. Delete the variable later to turn the panel off.
+    required: true
 
 services:
   vaultwarden:
@@ -31,5 +34,5 @@ services:
       ROCKET_PORT: "8080"
       DOMAIN: ${{services.vaultwarden.url}}
       SIGNUPS_ALLOWED: ${{vars.SIGNUPS_ALLOWED}}
-      # Opens /admin. Read it from the service's variables after deploy.
-      ADMIN_TOKEN: ${{secret(48)}}
+      # Opens /admin. Asked for at deploy: service variables are write-only.
+      ADMIN_TOKEN: ${{vars.ADMIN_TOKEN}}

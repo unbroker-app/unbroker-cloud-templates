@@ -17,8 +17,9 @@ apps, browser extensions and CLI work against it.
 3. In any Bitwarden app, pick **Self-hosted** and enter the service URL as the
    server.
 
-The admin panel lives at `/admin`. Its token is the generated `ADMIN_TOKEN`
-variable on the service.
+The admin panel lives at `/admin`, behind the `ADMIN_TOKEN` you chose at
+deploy. Service variables are write-only, so keep a copy: to change it, set a
+new `ADMIN_TOKEN` and redeploy. Deleting the variable turns the panel off.
 
 ## Notes
 
