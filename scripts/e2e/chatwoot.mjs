@@ -51,6 +51,10 @@ export async function setup(ctx) {
   const { call, data } = await signIn(ctx);
   assert(data.type === "SuperAdmin" || data.role === "administrator", `signed in as the admin (got ${JSON.stringify(data).slice(0, 200)})`);
   assert(sidekiqRunning(ctx), "Sidekiq runs next to the web server");
+  // Rails.cache must not be the default file store under the read-only /app/tmp.
+  const cache = ctx.exec("chatwoot", ["bundle", "exec", "ruby", "-r/tmp/unbroker_cache.rb", "bin/rails", "runner",
+    'Rails.cache.write("e2e", 42); puts Rails.cache.class.name; puts Rails.cache.read("e2e")']);
+  assert(/MemoryStore\s+42/.test(cache), `Rails.cache works (got ${cache.slice(-300)})`);
 
   const inbox = await call("POST", "/inboxes", { name: "E2E API", channel: { type: "api" } });
   assert(inbox.status === 200 && inbox.json?.id, `inbox created (got ${inbox.status}: ${inbox.text.slice(0, 300)})`);

@@ -63,12 +63,16 @@ services:
     # Sidekiq (background jobs) runs next to the web server in this container,
     # so both see the same uploads; if it dies, the container restarts. An
     # empty MAILER_SENDER_EMAIL is unset so Chatwoot's default sender applies.
+    # /app is read-only for this user, so Puma starts directly (rails s would
+    # create /app/tmp/*) and a tiny preloaded hook moves Rails.cache from its
+    # default file store under /app/tmp to memory (Rack::Attack uses Redis).
     startCommand: >-
       { [ -n "$MAILER_SENDER_EMAIL" ] || unset MAILER_SENDER_EMAIL; } &&
+      printf '%s\n' 'require "bundler/setup"' 'require "active_support/lazy_load_hooks"' 'ActiveSupport.on_load(:before_configuration) { config.cache_store = :memory_store }' > /tmp/unbroker_cache.rb &&
       bundle exec rails db:chatwoot_prepare &&
       bundle exec rails runner 'if User.count.zero?; AccountBuilder.new(account_name: ENV.fetch("COMPANY_NAME"), user_full_name: ENV.fetch("ADMIN_NAME"), email: ENV.fetch("ADMIN_EMAIL"), user_password: ENV.fetch("ADMIN_PASSWORD"), super_admin: true, confirmed: true).perform; puts "Chatwoot admin created for " + ENV.fetch("ADMIN_EMAIL"); end; Redis::Alfred.delete(Redis::Alfred::CHATWOOT_INSTALLATION_ONBOARDING)' &&
-      { ( bundle exec sidekiq -C config/sidekiq.yml; echo 'Sidekiq exited, restarting the container'; kill 1 ) & } &&
-      exec bundle exec rails s -p 3000 -b 0.0.0.0
+      { ( bundle exec ruby -r/tmp/unbroker_cache.rb -S sidekiq -C config/sidekiq.yml; echo 'Sidekiq exited, restarting the container'; kill 1 ) & } &&
+      exec bundle exec ruby -r/tmp/unbroker_cache.rb -S puma -C config/puma.rb
     env:
       FRONTEND_URL: ${{services.chatwoot.url}}
       SECRET_KEY_BASE: ${{secret(64)}}
