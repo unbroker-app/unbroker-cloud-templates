@@ -1,0 +1,103 @@
+name: Chatwoot
+tagline: Open-source customer support inbox for chat, email, WhatsApp and social
+category: productivity
+tags: [support, helpdesk, live-chat, crm, intercom]
+maintainer: Unbroker
+official: true
+links:
+  website: https://www.chatwoot.com
+  source: https://github.com/chatwoot/chatwoot
+  docs: https://www.chatwoot.com/docs/self-hosted
+
+variables:
+  ADMIN_EMAIL:
+    description: Email of the first admin (also a super admin of the installation). You sign in with it.
+  ADMIN_PASSWORD:
+    description: Password for that admin. Chatwoot requires an uppercase letter, a lowercase letter, a number and a special character.
+  ADMIN_NAME:
+    description: Name shown for that admin.
+    default: Admin
+  COMPANY_NAME:
+    description: Name of the first account (your company or team).
+    default: My Company
+  SMTP_ADDRESS:
+    description: SMTP server for invitations, password resets and email notifications, e.g. smtp.resend.com. Leave empty to set it up later.
+    required: false
+  SMTP_PORT:
+    description: SMTP port (587 for STARTTLS).
+    default: "587"
+  SMTP_USERNAME:
+    description: SMTP username.
+    required: false
+  SMTP_PASSWORD:
+    description: SMTP password or API key.
+    required: false
+  MAILER_SENDER_EMAIL:
+    description: Sender of Chatwoot's emails, e.g. Support <support@yourdomain.com>.
+    required: false
+
+services:
+  db:
+    preset: postgres
+    env:
+      POSTGRES_DB: chatwoot
+
+  redis:
+    preset: redis
+
+  chatwoot:
+    name: Chatwoot
+    image: chatwoot/chatwoot:v4.18.0
+    port: 3000
+    public: true
+    healthcheck: /health
+    # Uploaded files and attachments (Active Storage "local"). Conversations
+    # live in Postgres.
+    volume:
+      path: /app/storage
+      sizeGb: 5
+    # Migrates, then makes sure an admin exists: a fresh Chatwoot otherwise
+    # shows its "create the super admin" page to whoever opens the URL first.
+    # The admin is created from the deploy form and that page is closed; if
+    # Chatwoot rejects the values, boot stops there and the page never opens.
+    # Sidekiq (background jobs) runs next to the web server in this container,
+    # so both see the same uploads; if it dies, the container restarts. An
+    # empty MAILER_SENDER_EMAIL is unset so Chatwoot's default sender applies.
+    # /app is read-only for this user, so Puma starts directly (rails s would
+    # create /app/tmp/*) and a tiny preloaded hook moves Rails.cache from its
+    # default file store under /app/tmp to memory (Rack::Attack uses Redis).
+    startCommand: >-
+      { [ -n "$MAILER_SENDER_EMAIL" ] || unset MAILER_SENDER_EMAIL; } &&
+      printf '%s\n' 'require "bundler/setup"' 'require "active_support/lazy_load_hooks"' 'ActiveSupport.on_load(:before_configuration) { config.cache_store = :memory_store }' > /tmp/unbroker_cache.rb &&
+      bundle exec rails db:chatwoot_prepare &&
+      bundle exec rails runner 'if User.count.zero?; AccountBuilder.new(account_name: ENV.fetch("COMPANY_NAME"), user_full_name: ENV.fetch("ADMIN_NAME"), email: ENV.fetch("ADMIN_EMAIL"), user_password: ENV.fetch("ADMIN_PASSWORD"), super_admin: true, confirmed: true).perform; puts "Chatwoot admin created for " + ENV.fetch("ADMIN_EMAIL"); end; Redis::Alfred.delete(Redis::Alfred::CHATWOOT_INSTALLATION_ONBOARDING)' &&
+      { ( bundle exec ruby -r/tmp/unbroker_cache.rb -S sidekiq -C config/sidekiq.yml; echo 'Sidekiq exited, restarting the container'; kill 1 ) & } &&
+      exec bundle exec ruby -r/tmp/unbroker_cache.rb -S puma -C config/puma.rb
+    env:
+      FRONTEND_URL: ${{services.chatwoot.url}}
+      SECRET_KEY_BASE: ${{secret(64)}}
+      RAILS_ENV: production
+      NODE_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      INSTALLATION_ENV: docker
+      ENABLE_ACCOUNT_SIGNUP: "false"
+      POSTGRES_HOST: ${{services.db.host}}
+      POSTGRES_PORT: ${{services.db.port}}
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${{services.db.env.POSTGRES_PASSWORD}}
+      REDIS_URL: redis://${{services.redis.host}}:${{services.redis.port}}
+      REDIS_PASSWORD: ${{services.redis.env.REDIS_PASSWORD}}
+      ACTIVE_STORAGE_SERVICE: local
+      # The image's /app is read-only for this user; keep runtime files in /tmp.
+      PIDFILE: /tmp/puma.pid
+      BOOTSNAP_CACHE_DIR: /tmp/bootsnap
+      SMTP_ADDRESS: ${{vars.SMTP_ADDRESS}}
+      SMTP_PORT: ${{vars.SMTP_PORT}}
+      SMTP_USERNAME: ${{vars.SMTP_USERNAME}}
+      SMTP_PASSWORD: ${{vars.SMTP_PASSWORD}}
+      MAILER_SENDER_EMAIL: ${{vars.MAILER_SENDER_EMAIL}}
+      ADMIN_EMAIL: ${{vars.ADMIN_EMAIL}}
+      ADMIN_PASSWORD: ${{vars.ADMIN_PASSWORD}}
+      ADMIN_NAME: ${{vars.ADMIN_NAME}}
+      COMPANY_NAME: ${{vars.COMPANY_NAME}}
