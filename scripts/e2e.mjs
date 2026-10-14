@@ -22,8 +22,9 @@
 //                            say), started first on the template's network.
 //                            The template reaches one at ubt-<slug>-<name>
 //                            and the test at ctx.sidecar(name).
-// ctx is { url(service), env(service), exec(service, argv), log(msg),
-//          sidecar(name), http(service, path, init) → { status, headers, text, json } }.
+// ctx is { url(service), env(service), exec(service, argv), logs(service),
+//          log(msg), sidecar(name),
+//          http(service, path, init) → { status, headers, text, json } }.
 // Throw (or use ctx.assert) to fail.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -96,6 +97,10 @@ const ctx = {
   log: (msg) => console.log(`  ${msg}`),
   assert(cond, msg) {
     if (!cond) throw new Error(`assertion failed: ${msg}`);
+  },
+  logs: (name) => {
+    const r = docker(["logs", state.services[name].container]);
+    return r.stdout + r.stderr;
   },
   exec(name, argv) {
     const r = docker(["exec", state.services[name].container, ...argv]);
