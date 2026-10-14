@@ -46,8 +46,9 @@ services:
     # The image keeps PrestaShop and its setup script under /tmp, which the
     # platform replaces with a scratch dir, so first boot downloads the same
     # release (checked against its sha256) onto the volume and runs the CLI
-    # installer, then renames the back office to ADMIN_FOLDER (an interrupted
-    # install starts over on the next boot). Apache runs from
+    # installer on a fresh database, then renames the back office (which the
+    # installer names admin<random>) to ADMIN_FOLDER. An interrupted install
+    # starts over on the next boot. Apache runs from
     # a copy of its config that listens on 8080 and keeps its runtime files in
     # /tmp, so it works without root.
     startCommand: >-
@@ -58,13 +59,14 @@ services:
       find $H -mindepth 1 -delete;
       wget -q -O $H/ps.zip "$PS_ZIP_URL"; echo "$PS_ZIP_SHA256  $H/ps.zip" | sha256sum -c -;
       unzip -q $H/ps.zip prestashop.zip -d $H; unzip -q $H/prestashop.zip -d $H; rm $H/ps.zip $H/prestashop.zip;
-      until php -r 'new PDO("mysql:host=".getenv("DB_SERVER").";port=".getenv("DB_PORT"), "root", getenv("DB_PASSWD"));' 2>/dev/null; do echo 'Waiting for MySQL...'; sleep 3; done;
+      until php -r '(new PDO("mysql:host=".getenv("DB_SERVER").";port=".getenv("DB_PORT"), "root", getenv("DB_PASSWD")))->exec("DROP DATABASE IF EXISTS prestashop; CREATE DATABASE prestashop");' 2>/dev/null; do echo 'Waiting for MySQL...'; sleep 3; done;
       case "$SHOP_URL" in https://*) SSL=1;; *) SSL=0;; esac;
       php -d memory_limit=-1 $H/install/index_cli.php --domain="$(echo "$SHOP_URL" | sed -E 's#^https?://##; s#/.*##')" --ssl=$SSL
       --db_server="$DB_SERVER:$DB_PORT" --db_name=prestashop --db_user=root --db_password="$DB_PASSWD" --prefix=ps_
       --name="$SHOP_NAME" --email="$ADMIN_EMAIL" --password="$ADMIN_PASSWORD" --firstname=Store --lastname=Admin
       --country="$SHOP_COUNTRY" --language="$SHOP_LANGUAGE" --fixtures=0 --newsletter=0 --send_email=0;
-      rm -rf $H/install; mv $H/admin "$H/$ADMIN_FOLDER"; touch $H/.unbroker-installed;
+      rm -rf $H/install; A=$(find $H -maxdepth 1 -type d -name 'admin*' ! -name admin-api | head -n 1);
+      [ "$A" = "$H/$ADMIN_FOLDER" ] || mv "$A" "$H/$ADMIN_FOLDER"; touch $H/.unbroker-installed;
       echo "PrestaShop installed. Back office: $SHOP_URL/$ADMIN_FOLDER";
       fi;
       rm -rf /tmp/apache2 && cp -r /etc/apache2 /tmp/apache2 &&
