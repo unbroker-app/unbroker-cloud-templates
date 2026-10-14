@@ -15,7 +15,7 @@
 // Needs Docker. Public services are published on a free localhost port.
 import { spawnSync } from "node:child_process";
 import { randomInt } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { join } from "node:path";
 import { parse } from "yaml";
@@ -51,6 +51,7 @@ if (rest.includes("--down")) {
     docker(["volume", "rm", "-f", `${cname(s)}-data`], { check: false });
   }
   docker(["network", "rm", net], { check: false });
+  await rm(join(ROOT, ".try", `${slug}.json`), { force: true });
   console.log(`✓ removed ${slug}`);
   process.exit(0);
 }
@@ -149,6 +150,32 @@ for (const name of order) {
   console.log(`▶ ${name} (${s.image})`);
   docker(args);
 }
+
+// What scripts/e2e.mjs needs to drive the running template.
+await mkdir(join(ROOT, ".try"), { recursive: true });
+await writeFile(
+  join(ROOT, ".try", `${slug}.json`),
+  JSON.stringify(
+    {
+      slug,
+      order: order.map(cname),
+      services: Object.fromEntries(
+        order.map((n) => [
+          n,
+          {
+            container: cname(n),
+            public: specs[n].public,
+            url: specs[n].public ? `http://localhost:${specs[n].hostPort}` : null,
+            healthcheck: specs[n].healthcheck ?? null,
+            env: specs[n].resolved,
+          },
+        ]),
+      ),
+    },
+    null,
+    2,
+  ),
+);
 
 // Wait for each public service to answer its healthcheck (or /) with 2xx/3xx.
 let ok = true;
