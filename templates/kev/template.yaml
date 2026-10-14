@@ -1,0 +1,31 @@
+name: Kev
+tagline: Self-hosted decision model API for classification, choices and scoring
+category: ai
+tags: [ai, inference, classification, api]
+maintainer: Unbroker
+official: true
+links:
+  website: https://github.com/jaredpalmer/kev
+  source: https://github.com/unbroker-app/kev-container
+  docs: https://github.com/jaredpalmer/kev#quick-start
+
+services:
+  kev:
+    name: Kev
+    image: ghcr.io/unbroker-app/kev-container:sha-20e5eec295c6a6a338ac87e663628ce111511d9f
+    port: 8009
+    cpuLimit: 2000
+    memoryLimit: 6144
+    public: true
+    healthcheck: /healthz
+    volume:
+      path: /data
+      sizeGb: 10
+    env:
+      KEV_API_KEY: ${{secret(48)}}
+      HF_HOME: /data/huggingface
+      XDG_CACHE_HOME: /data/cache
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      KEV_PREFIX_CACHE: "0"
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
