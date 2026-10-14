@@ -23,7 +23,7 @@ async function adminLogin({ http, assert }) {
 
 function installedAt({ exec, env }) {
   const pw = env("db").MYSQL_ROOT_PASSWORD;
-  return exec("db", ["mysql", "-uroot", `-p${pw}`, "-N", "-e", "SELECT date_add FROM prestashop.ps_employee WHERE id_employee = 1"]).trim();
+  return exec("db", ["mysql", "-uroot", `-p${pw}`, "-N", "-e", "SELECT MIN(date_add) FROM prestashop.ps_configuration"]).trim();
 }
 
 export async function setup(ctx) {
