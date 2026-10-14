@@ -1,0 +1,54 @@
+name: Paperclip
+tagline: Run a company of AI agents with goals, org charts, budgets and tickets
+category: ai
+tags: [ai, agents, orchestration, claude-code, codex]
+maintainer: Unbroker
+official: true
+links:
+  website: https://paperclip.ing
+  source: https://github.com/paperclipai/paperclip
+  docs: https://github.com/paperclipai/paperclip/tree/master/doc
+
+services:
+  db:
+    preset: postgres
+    env:
+      POSTGRES_DB: paperclip
+
+  paperclip:
+    name: Paperclip
+    image: ghcr.io/paperclipai/paperclip:2026.1012.0
+    port: 3100
+    public: true
+    healthcheck: /api/health
+    # Instance data: agent workspaces, uploads, backups, and the CLI agents'
+    # sign-ins. Companies, agents and tickets live in Postgres.
+    volume:
+      path: /paperclip
+      sizeGb: 10
+    # Public Paperclip instances get their first admin through a one-time
+    # invite. While the instance has no admin, a one-off script creates one and
+    # prints its URL to these logs (a newer boot replaces the older link).
+    # tini stays PID 1 to reap the agent processes, as in the image.
+    startCommand: >-
+      node -e 'const e=process.env,u="http://127.0.0.1:"+e.PORT;(async()=>{for(;;){try{const r=await fetch(u+"/api/health");if(r.ok){if((await r.json()).bootstrapStatus!=="bootstrap_pending")return;break}}catch{}await new Promise(s=>setTimeout(s,2000))}const sql=require("module").createRequire("/app/packages/db/package.json")("postgres")(e.DATABASE_URL),c=require("crypto"),t="pcp_bootstrap_"+c.randomBytes(24).toString("hex"),h=c.createHash("sha256").update(t).digest("hex");await sql.unsafe("update invites set revoked_at=now(), updated_at=now() where invite_type=$1 and revoked_at is null and accepted_at is null",["bootstrap_ceo"]);await sql.unsafe("insert into invites (invite_type, token_hash, allowed_join_types, expires_at, invited_by_user_id) values ($1, $2, $3, now() + make_interval(hours => 72), $4)",["bootstrap_ceo",h,"human","system"]);console.log("\n  Claim this Paperclip instance (valid 72 hours): "+e.PAPERCLIP_PUBLIC_URL+"/invite/"+t+"\n");await sql.end()})().catch(x=>console.error("bootstrap invite failed:",x))' &
+      exec /usr/bin/tini -- node --import ./server/node_modules/tsx/dist/loader.mjs server/dist/index.js
+    env:
+      DATABASE_URL: postgres://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/paperclip
+      PAPERCLIP_MIGRATION_AUTO_APPLY: "true"
+      PAPERCLIP_DEPLOYMENT_MODE: authenticated
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: public
+      PAPERCLIP_PUBLIC_URL: ${{services.paperclip.url}}
+      BETTER_AUTH_SECRET: ${{secret(64)}}
+      # Encrypts the API keys and secrets you give your agents.
+      PAPERCLIP_SECRETS_MASTER_KEY: ${{secret(32)}}
+      PAPERCLIP_HOME: /paperclip
+      SERVE_UI: "true"
+      # HOME is pinned to a scratch dir; keep the bundled CLI agents' sign-ins
+      # and settings on the volume instead.
+      CLAUDE_CONFIG_DIR: /paperclip/.agents/claude
+      CODEX_HOME: /paperclip/.agents/codex
+      GEMINI_CLI_HOME: /paperclip/.agents/gemini
+      XDG_CONFIG_HOME: /paperclip/.agents/config
+      XDG_DATA_HOME: /paperclip/.agents/data
+      SHELL: /bin/sh
