@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "commit": "2a1c3dca6a996802f83a9ce5f26076399349c1cf",
-  "generatedAt": "2026-10-14T23:55:45.555Z",
+  "commit": "3bc678ed74b474353df4c763bdae7d7a0f6a6b39",
+  "generatedAt": "2026-10-14T23:57:03.019Z",
   "templates": [
     {
       "slug": "directus",
@@ -66,7 +66,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/directus/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/directus/logo.svg",
       "readme": "# Directus\n\nTurns a SQL database into an instant REST and GraphQL API, with a no-code app\nto manage content, users, files and permissions.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Directus** | `directus/directus:12.5.0` | Public. Admin app at `/admin`. 1 GiB volume for uploaded files |\n| **db** | PostgreSQL 16 | Internal. Your data model and content |\n\n## After deploy\n\nOpen `<your-url>/admin` and sign in with the **admin email and password** from\nthe deploy form.\n\n## Notes\n\nDirectus uses the Business Source License: it is free for organizations under\nUSD 5M in annual revenue. Check [their license](https://directus.io/bsl) for\nanything beyond that.\n"
     },
     {
@@ -129,7 +129,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/flowise/logo.png",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/flowise/logo.png",
       "readme": "# Flowise\n\nBuild AI agents, chatbots and RAG pipelines with drag-and-drop nodes for every\nmajor LLM, vector store and tool, then call them over an API or embed them on a\nsite.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Flowise** | `flowiseai/flowise:3.1.4` | Public. 1 GiB volume for uploaded documents and logs |\n| **db** | PostgreSQL 16 | Internal. Chatflows, credentials and users |\n\nThe secrets Flowise uses to sign sessions and encrypt stored API keys are\ngenerated for you.\n\n## After deploy\n\nOpen the URL and create the **admin account**. The first visitor gets it.\nThen add your model provider's API key under **Credentials**.\n\n## Notes\n\nOn this release a few node types (the ReAct agent nodes and AWS Bedrock) fail to\nload because of upstream packaging issues. Every other node works.\n"
     },
     {
@@ -178,7 +178,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/ghost/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/ghost/logo.svg",
       "readme": "# Ghost\n\nA professional publishing platform: a modern editor, newsletters, paid\nmemberships and themes.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Ghost** | `ghost:6.70.0` | Public. 1 GiB volume for themes, images and uploads |\n| **db** | MySQL 8 | Internal. Posts, members and settings |\n\n## After deploy\n\nGo to `<your-url>/ghost` and create the **owner account**. The first visitor to\nthat page gets it, so do this right away.\n\n## Notes\n\n- **Email.** Staff invites, password resets and newsletters need an SMTP or\n  Mailgun account. Ghost reads its config from lowercase variables, so add yours\n  to the `export …` line of the service's start command, e.g.\n  `mail__transport=SMTP mail__options__host=…`.\n- **Custom domain.** Ghost builds every link from its `url`. After you add a\n  domain, set `GHOST_URL` to it and redeploy.\n"
     },
     {
@@ -218,7 +218,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/memos/logo.png",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/memos/logo.png",
       "readme": "# Memos\n\nA lightweight, privacy-first place for notes: write in Markdown, tag, search,\nand share individual memos.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Memos** | `neosmemo/memos:0.31.0` | Public. 1 GiB volume for notes (SQLite) and attachments |\n\n## After deploy\n\nOpen the URL and **sign up**. The first account becomes the admin. Then go to\n**Settings → System** and disable open sign-ups unless you want them.\n"
     },
     {
@@ -287,7 +287,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/metabase/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/metabase/logo.svg",
       "readme": "# Metabase\n\nOpen-source business intelligence: connect your databases, ask questions with\na visual query builder or SQL, and share dashboards with your team.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Metabase** | `metabase/metabase:v0.64.2.3` | Public. Database drivers on a 1 GB volume |\n| **db** | PostgreSQL 16 | Internal. Metabase's own data: users, questions, dashboards |\n\n## After deploy\n\nMetabase takes a minute or two to start the first time. Then sign in with the\n**admin email and password** you entered in the deploy form: the template\ncompletes Metabase's setup with them on first boot, so the \"create the first\nadmin\" page is never open to whoever finds your URL first.\n\nAdd the databases you want to analyze under **Admin → Databases → Add a\ndatabase**. A sample database is included to play with.\n\n## Good to know\n\n- The password must have at least **15 characters** and not be a common\n  one. If Metabase rejects it, the container stops and logs why: redeploy with a\n  better password.\n- `ADMIN_EMAIL` and `ADMIN_PASSWORD` are only used on first boot. Change them\n  later in Metabase under **Account settings**.\n- `MB_ENCRYPTION_SECRET_KEY` is generated at deploy and encrypts the\n  credentials of the databases you connect. Don't change it.\n- Metabase is a Java app and wants about **1 GB of memory** or more.\n"
     },
     {
@@ -342,7 +342,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/miniflux/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/miniflux/logo.svg",
       "readme": "# Miniflux\n\nA minimalist, fast feed reader: RSS, Atom and JSON Feed, keyboard shortcuts,\nfull-text fetching, and a REST API, with no tracking and no clutter.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Miniflux** | `miniflux/miniflux:2.3.3` | Public. Migrations run on boot |\n| **db** | PostgreSQL 16 | Internal. Feeds, entries and users |\n\n## After deploy\n\nSign in with the **admin username and password** you entered in the deploy\nform. Add more users under **Settings → Users**.\n\nTo use a mobile or desktop client (Fever or Google Reader API), enable it under\n**Settings → Integrations**.\n"
     },
     {
@@ -408,7 +408,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/n8n/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/n8n/logo.svg",
       "readme": "# n8n\n\nWorkflow automation you host yourself: connect 400+ apps and APIs, run code\nsteps, and build AI agents on a visual canvas.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **n8n** | `n8nio/n8n:2.44.1` | Public. Editor, webhooks and the API on one URL. 1 GiB volume for credentials files and community nodes |\n| **db** | PostgreSQL 16 | Internal. Workflows, executions and users |\n\n`N8N_ENCRYPTION_KEY` is generated for you. Every credential n8n stores is\nencrypted with it, so **don't change or delete it**. If you lose it, the stored\ncredentials become unreadable.\n\n## After deploy\n\n1. Open the service URL. n8n asks you to create the **owner account**, and the\n   first person to open the URL gets it, so do this right away.\n2. Webhook URLs already point at the public address (`WEBHOOK_URL`). If you\n   add a custom domain, update `WEBHOOK_URL` and `N8N_EDITOR_BASE_URL` to match.\n\n## Notes\n\n- Schedule and polling triggers run inside the n8n process, so keep the\n  service running if you rely on them.\n- Large workflows can need more memory. Raise the limit in the service's\n  **Scale** tab.\n"
     },
     {
@@ -517,8 +517,70 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/outline/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/outline/logo.svg",
       "readme": "# Outline\n\nA fast, collaborative knowledge base for your team: nested documents,\nreal-time editing, Markdown shortcuts, search, and integrations with Slack,\nFigma, Linear and more.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Outline** | `outlinewiki/outline:1.11.0` | Public. Migrations run on boot. Uploads on a 5 GB volume |\n| **db** | PostgreSQL 16 | Internal. Documents, users, history |\n| **redis** | Redis 7 | Internal. Real-time collaboration and background jobs |\n\n## Before you deploy: email\n\nOutline signs people in with a **link sent by email**, so it needs an SMTP\nserver. Any transactional provider works (Resend, Postmark, Amazon SES,\nMailgun, your own). Have the host, port, credentials, and a verified sender\naddress ready for the deploy form.\n\n## After deploy\n\nThe template creates the workspace on first boot with the **admin email** from\nthe deploy form, so nobody else can claim it. Open your Outline URL, enter that\nemail, and click the link you receive.\n\nInvite your team from **Settings → Members**. To sign in with Google, Slack,\nMicrosoft or any OIDC provider instead of email links, add that provider's\nvariables (see [Outline's docs](https://docs.getoutline.com/s/hosting/doc/authentication-7ViKRmRY5o)).\n\n## Good to know\n\n- If Outline rejects the admin email or workspace name, the container stops and\n  logs why, so the \"create workspace\" page never sits open. Fix the value and\n  redeploy.\n- `ADMIN_EMAIL`, `ADMIN_NAME` and `WORKSPACE_NAME` are only used on first boot.\n- No sign-in email? Check the Outline service's logs: SMTP errors show up there.\n  Port 465 needs `SMTP_SECURE=true`; 587 needs `false`.\n"
+    },
+    {
+      "slug": "paperclip",
+      "name": "Paperclip",
+      "tagline": "Run a company of AI agents with goals, org charts, budgets and tickets",
+      "category": "ai",
+      "tags": [
+        "ai",
+        "agents",
+        "orchestration",
+        "claude-code",
+        "codex"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://paperclip.ing",
+        "source": "https://github.com/paperclipai/paperclip",
+        "docs": "https://github.com/paperclipai/paperclip/tree/master/doc"
+      },
+      "variables": {},
+      "services": {
+        "db": {
+          "preset": "postgres",
+          "volumeSizeGb": 1,
+          "env": {
+            "POSTGRES_DB": "paperclip"
+          }
+        },
+        "paperclip": {
+          "name": "Paperclip",
+          "image": "ghcr.io/paperclipai/paperclip:2026.1012.0",
+          "port": 3100,
+          "public": true,
+          "startCommand": "node -e 'const e=process.env,u=\"http://127.0.0.1:\"+e.PORT;(async()=>{for(;;){try{const r=await fetch(u+\"/api/health\");if(r.ok){if((await r.json()).bootstrapStatus!==\"bootstrap_pending\")return;break}}catch{}await new Promise(s=>setTimeout(s,2000))}const sql=require(\"module\").createRequire(\"/app/packages/db/package.json\")(\"postgres\")(e.DATABASE_URL),c=require(\"crypto\"),t=\"pcp_bootstrap_\"+c.randomBytes(24).toString(\"hex\"),h=c.createHash(\"sha256\").update(t).digest(\"hex\");await sql.unsafe(\"update invites set revoked_at=now(), updated_at=now() where invite_type=$1 and revoked_at is null and accepted_at is null\",[\"bootstrap_ceo\"]);await sql.unsafe(\"insert into invites (invite_type, token_hash, allowed_join_types, expires_at, invited_by_user_id) values ($1, $2, $3, now() + make_interval(hours => 72), $4)\",[\"bootstrap_ceo\",h,\"human\",\"system\"]);console.log(\"\\n  Claim this Paperclip instance (valid 72 hours): \"+e.PAPERCLIP_PUBLIC_URL+\"/invite/\"+t+\"\\n\");await sql.end()})().catch(x=>console.error(\"bootstrap invite failed:\",x))' & exec /usr/bin/tini -- node --import ./server/node_modules/tsx/dist/loader.mjs server/dist/index.js",
+          "healthcheck": "/api/health",
+          "volume": {
+            "path": "/paperclip",
+            "sizeGb": 10
+          },
+          "env": {
+            "DATABASE_URL": "postgres://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/paperclip",
+            "PAPERCLIP_MIGRATION_AUTO_APPLY": "true",
+            "PAPERCLIP_DEPLOYMENT_MODE": "authenticated",
+            "PAPERCLIP_DEPLOYMENT_EXPOSURE": "public",
+            "PAPERCLIP_PUBLIC_URL": "${{services.paperclip.url}}",
+            "BETTER_AUTH_TRUSTED_ORIGINS": "${{services.paperclip.url}}",
+            "BETTER_AUTH_SECRET": "${{secret(64)}}",
+            "PAPERCLIP_SECRETS_MASTER_KEY": "${{secret(32)}}",
+            "PAPERCLIP_HOME": "/paperclip",
+            "SERVE_UI": "true",
+            "CLAUDE_CONFIG_DIR": "/paperclip/.agents/claude",
+            "CODEX_HOME": "/paperclip/.agents/codex",
+            "GEMINI_CLI_HOME": "/paperclip/.agents/gemini",
+            "XDG_CONFIG_HOME": "/paperclip/.agents/config",
+            "XDG_DATA_HOME": "/paperclip/.agents/data",
+            "SHELL": "/bin/sh"
+          }
+        }
+      },
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/paperclip/logo.svg",
+      "readme": "# Paperclip\n\nOpen-source orchestration for teams of AI agents. Set a company goal, hire\nagents (Claude Code, Codex, Gemini, OpenCode or any HTTP/bash agent) into an\norg chart, give them budgets, and track their work as tickets, all from one\ndashboard.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Paperclip** | `ghcr.io/paperclipai/paperclip:2026.1012.0` | Public. Migrations run on boot. 10 GB volume for agent workspaces and data |\n| **db** | PostgreSQL 16 | Internal. Companies, agents, tickets, budgets |\n\nIt runs in Paperclip's `authenticated` + `public` mode: everything requires\nsigning in.\n\n## After deploy: claim the instance\n\nPublic Paperclip instances get their first admin through a **one-time invite\nlink**, not a setup page anyone could reach first:\n\n1. Open the **Paperclip service's logs** and find the line\n   `Claim this Paperclip instance (valid 72 hours): https://…/invite/pcp_bootstrap_…`.\n2. Open that link, create your account, and accept the invite. You are now the\n   instance admin.\n3. Create your first company and hire agents.\n\nThe link works once. If it expires before you use it, restart the service: a new\none is printed (and the old one stops working). Once the instance has an\nadmin, nothing is printed.\n\n## Good to know\n\n- **Agents need model credentials.** Add your Anthropic, OpenAI or other API\n  keys in Paperclip. They are encrypted with a key generated at deploy.\n  Sign-ins made by the bundled CLIs are kept on the volume.\n- Agents run **inside this container**, with its CPU and memory. Give the\n  service at least 2 vCPU and 4 GB of memory, more if you run several agents\n  at once.\n- Anyone who finds the URL can create an account, but an account sees nothing\n  until an admin invites it to a company.\n"
     },
     {
       "slug": "umami",
@@ -567,7 +629,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/umami/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/umami/logo.svg",
       "readme": "# Umami\n\nSimple, fast, privacy-focused web analytics: pageviews, referrers, devices,\nevents, funnels and goals, with no cookies and nothing sent to third parties.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Umami** | `ghcr.io/umami-software/umami:3.4.0` | Public. Migrations run on boot |\n| **db** | PostgreSQL 16 | Internal. Websites, users and every event |\n\n## After deploy\n\nSign in with username **`admin`** and the **password you entered in the deploy\nform**. Umami ships with `admin` / `umami`; the template replaces that password\nas soon as the server is up, so the default never works on your instance.\n\nThen add a website under **Settings → Websites → Add website** and paste its\ntracking code into your site's `<head>`:\n\n```html\n<script defer src=\"https://<your-umami-url>/script.js\" data-website-id=\"…\"></script>\n```\n\n## Good to know\n\n- `ADMIN_PASSWORD` is only applied while the account still has the default\n  password. Changing it later in the deploy form does nothing: change it in\n  Umami under **Profile → Change password**.\n- Ad blockers often block `script.js`. Umami's docs explain how to\n  [rename the tracker](https://umami.is/docs/environment-variables) with\n  `TRACKER_SCRIPT_NAME` if that matters to you.\n"
     },
     {
@@ -605,7 +667,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/uptime-kuma/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/uptime-kuma/logo.svg",
       "readme": "# Uptime Kuma\n\nA friendly self-hosted monitoring tool. It checks HTTP(s), TCP, ping, DNS,\nDocker and more, can publish public status pages, and sends alerts to 90+\nnotification services.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Uptime Kuma** | `louislam/uptime-kuma:2.5.6` | Public. 1 GiB volume for its database and settings |\n\n## After deploy\n\n1. Open the URL. On first launch Uptime Kuma asks which database to use: pick\n   **SQLite**. It lives on the service's volume.\n2. Create the admin account. The first visitor gets it, so do this right away.\n3. Add monitors, then share a status page if you want one.\n\n## Notes\n\nUptime Kuma checks from inside the platform, so keep the service running for\nyour monitors to keep firing.\n"
     },
     {
@@ -656,7 +718,7 @@
           }
         }
       },
-      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@2a1c3dca6a996802f83a9ce5f26076399349c1cf/templates/vaultwarden/logo.svg",
+      "logoUrl": "https://cdn.jsdelivr.net/gh/unbroker-app/unbroker-cloud-templates@3bc678ed74b474353df4c763bdae7d7a0f6a6b39/templates/vaultwarden/logo.svg",
       "readme": "# Vaultwarden\n\nA lightweight server that speaks the Bitwarden API, so the official Bitwarden\napps, browser extensions and CLI work against it.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Vaultwarden** | `vaultwarden/server:1.37.4` | Public. 1 GiB volume for the vault database (SQLite), attachments and keys |\n\n## After deploy\n\n1. Open the URL and **create your account**.\n2. Turn off public signups: set `SIGNUPS_ALLOWED` to `false` in the service's\n   variables and redeploy.\n3. In any Bitwarden app, pick **Self-hosted** and enter the service URL as the\n   server.\n\nThe admin panel lives at `/admin`, behind the `ADMIN_TOKEN` you chose at\ndeploy. Service variables are write-only, so keep a copy: to change it, set a\nnew `ADMIN_TOKEN` and redeploy. Deleting the variable turns the panel off.\n\n## Notes\n\nVaultwarden is an independent project, not affiliated with Bitwarden, Inc.\nBack up the volume: it is your vault.\n"
     }
   ]
