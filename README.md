@@ -20,6 +20,8 @@ scripts/
   schema.mjs      # the rules (mirrors what the platform enforces)
   build.mjs       # validate everything and build dist/catalog.json
   try.mjs         # run a template locally under the platform's constraints
+  e2e.mjs         # try + drive + restart + check: what CI runs on every PR
+  e2e/<slug>.mjs  # optional per-template end-to-end steps
 ```
 
 ## template.yaml
@@ -125,10 +127,18 @@ problems come from this:
    `try` drops privileges, pins `HOME`, mounts the volume like a cluster disk,
    resolves every token, and waits for each public service's healthcheck.
 4. Make sure it works past the healthcheck: sign in, create something, restart
-   the container, and confirm the data is still there.
+   the container, and confirm the data is still there. Write that down as
+   `scripts/e2e/<slug>.mjs` (see [`miniflux`](scripts/e2e/miniflux.mjs)) so CI
+   checks it on every change:
+   ```bash
+   npm run e2e -- <slug>          # boot, setup, verify, restart, verify again
+   ```
+   Without an e2e file, CI still boots the template, restarts every container
+   and waits for the healthchecks again.
 5. Write the `README.md`: what gets deployed, what to do right after deploy
    (who gets the first account?), and any caveats.
-6. Open a pull request. CI runs the same validation.
+6. Open a pull request. CI runs the same validation, and `npm run e2e` for
+   every template the pull request touches.
 
 Templates marked `official: true` are maintained by the Unbroker team. Leave it
 out for community templates.

@@ -1,0 +1,68 @@
+name: e2e
+
+# Boot every template a pull request touches under the platform's constraints
+# (npm run e2e), drive it, restart it, and check its data survived. A change to
+# the harness itself runs every template.
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      templates:
+        description: Space-separated slugs (empty = all)
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      slugs: ${{ steps.pick.outputs.slugs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: pick
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          INPUT: ${{ github.event.inputs.templates }}
+        run: |
+          all=$(ls templates)
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            slugs=${INPUT:-$all}
+          else
+            changed=$(git diff --name-only "$BASE"...HEAD)
+            if echo "$changed" | grep -qE '^(scripts/(try|e2e|presets|schema)\.mjs|package(-lock)?\.json|\.github/workflows/e2e\.yml)$'; then
+              slugs=$all
+            else
+              slugs=$(echo "$changed" | sed -nE 's#^(templates|scripts/e2e)/([a-z0-9-]+)(/|\.mjs$).*#\2#p' | sort -u)
+            fi
+          fi
+          # Only slugs that still exist (a PR may delete a template).
+          slugs=$(for s in $slugs; do [ -f "templates/$s/template.yaml" ] && echo "$s"; done)
+          echo "slugs=$(echo $slugs | jq -Rc 'split(" ") | map(select(. != ""))')" >> "$GITHUB_OUTPUT"
+          echo "templates: ${slugs:-none}"
+
+  e2e:
+    needs: plan
+    if: needs.plan.outputs.slugs != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        slug: ${{ fromJson(needs.plan.outputs.slugs) }}
+    name: e2e (${{ matrix.slug }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run e2e -- ${{ matrix.slug }}

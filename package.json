@@ -7,7 +7,8 @@
   "scripts": {
     "validate": "node scripts/build.mjs --check",
     "build": "node scripts/build.mjs",
-    "try": "node scripts/try.mjs"
+    "try": "node scripts/try.mjs",
+    "e2e": "node scripts/e2e.mjs"
   },
   "engines": { "node": ">=22" },
   "dependencies": {
