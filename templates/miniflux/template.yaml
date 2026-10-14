@@ -1,0 +1,37 @@
+name: Miniflux
+tagline: Minimalist, opinionated feed reader
+category: productivity
+tags: [rss, reader, news]
+maintainer: Unbroker
+official: true
+links:
+  website: https://miniflux.app
+  source: https://github.com/miniflux/v2
+  docs: https://miniflux.app/docs/
+
+variables:
+  ADMIN_USERNAME:
+    description: Username for the first admin account.
+    default: admin
+  ADMIN_PASSWORD:
+    description: Password for that account (at least 6 characters). It is all that stands between the public URL and your feeds, so pick a strong one.
+
+services:
+  db:
+    preset: postgres
+    env:
+      POSTGRES_DB: miniflux
+
+  miniflux:
+    name: Miniflux
+    image: miniflux/miniflux:2.3.3
+    port: 8080
+    public: true
+    healthcheck: /healthcheck
+    env:
+      DATABASE_URL: postgres://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/miniflux?sslmode=disable
+      RUN_MIGRATIONS: "1"
+      CREATE_ADMIN: "1"
+      ADMIN_USERNAME: ${{vars.ADMIN_USERNAME}}
+      ADMIN_PASSWORD: ${{vars.ADMIN_PASSWORD}}
+      BASE_URL: ${{services.miniflux.url}}

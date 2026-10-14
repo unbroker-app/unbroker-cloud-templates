@@ -1,0 +1,27 @@
+name: Memos
+tagline: Lightweight, privacy-first note-taking
+category: productivity
+tags: [notes, markdown, journal]
+maintainer: Unbroker
+official: true
+links:
+  website: https://usememos.com
+  source: https://github.com/usememos/memos
+  docs: https://usememos.com/docs
+
+services:
+  memos:
+    name: Memos
+    image: neosmemo/memos:0.31.0
+    port: 5230
+    public: true
+    healthcheck: /healthz
+    # Notes (SQLite) and attachments.
+    volume:
+      path: /var/opt/memos
+      sizeGb: 1
+    env:
+      MEMOS_MODE: prod
+      MEMOS_PORT: "5230"
+      MEMOS_DATA: /var/opt/memos
+      MEMOS_INSTANCE_URL: ${{services.memos.url}}

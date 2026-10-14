@@ -1,0 +1,49 @@
+name: publish
+
+# Build dist/catalog.json from main and publish it to the `catalog` branch,
+# which Unbroker Cloud reads. Pull requests never publish.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-catalog
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          CATALOG_COMMIT: ${{ github.sha }}
+      - name: Publish to the catalog branch
+        run: |
+          cp dist/catalog.json "$RUNNER_TEMP/catalog.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth 1 origin catalog; then
+            git switch -C catalog FETCH_HEAD
+          else
+            git switch --orphan catalog
+            git rm -rf --quiet . || true
+          fi
+          git clean -fdx --quiet
+          cp "$RUNNER_TEMP/catalog.json" catalog.json
+          git add catalog.json
+          if git diff --cached --quiet; then
+            echo "catalog unchanged"
+            exit 0
+          fi
+          git commit --quiet -m "catalog: ${GITHUB_SHA::7}"
+          git push origin catalog

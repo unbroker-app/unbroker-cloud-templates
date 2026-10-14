@@ -1,0 +1,48 @@
+name: Flowise
+tagline: Build AI agents and LLM workflows visually
+category: ai
+tags: [ai, agents, llm, rag, low-code]
+maintainer: Unbroker
+official: true
+links:
+  website: https://flowiseai.com
+  source: https://github.com/FlowiseAI/Flowise
+  docs: https://docs.flowiseai.com
+
+services:
+  db:
+    preset: postgres
+    env:
+      POSTGRES_DB: flowise
+
+  flowise:
+    name: Flowise
+    image: flowiseai/flowise:3.1.4
+    port: 3000
+    public: true
+    healthcheck: /api/v1/ping
+    # Uploaded documents, the encryption key file and logs.
+    volume:
+      path: /data
+      sizeGb: 1
+    env:
+      # The CLI (oclif) asks the OS for the user's shell unless SHELL is set, and
+      # the platform's runtime uid has no passwd entry to answer with.
+      SHELL: /bin/sh
+      PORT: "3000"
+      DATABASE_TYPE: postgres
+      DATABASE_HOST: ${{services.db.host}}
+      DATABASE_PORT: ${{services.db.port}}
+      DATABASE_NAME: flowise
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: ${{services.db.env.POSTGRES_PASSWORD}}
+      SECRETKEY_PATH: /data
+      BLOB_STORAGE_PATH: /data/storage
+      LOG_PATH: /data/logs
+      FLOWISE_SECRETKEY_OVERWRITE: ${{secret(48)}}
+      JWT_AUTH_TOKEN_SECRET: ${{secret(48)}}
+      JWT_REFRESH_TOKEN_SECRET: ${{secret(48)}}
+      EXPRESS_SESSION_SECRET: ${{secret(48)}}
+      TOKEN_HASH_SECRET: ${{secret(48)}}
+      APP_URL: ${{services.flowise.url}}
+      DISABLE_FLOWISE_TELEMETRY: "true"

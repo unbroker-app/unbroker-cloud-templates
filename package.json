@@ -1,0 +1,17 @@
+{
+  "name": "unbroker-cloud-templates",
+  "private": true,
+  "type": "module",
+  "description": "One-click app templates for Unbroker Cloud",
+  "license": "MIT",
+  "scripts": {
+    "validate": "node scripts/build.mjs --check",
+    "build": "node scripts/build.mjs",
+    "try": "node scripts/try.mjs"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
+  }
+}

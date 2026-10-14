@@ -1,0 +1,47 @@
+name: Directus
+tagline: Instant REST and GraphQL API with a no-code admin app for any SQL database
+category: backend
+tags: [headless-cms, api, graphql, admin]
+maintainer: Unbroker
+official: true
+links:
+  website: https://directus.io
+  source: https://github.com/directus/directus
+  docs: https://directus.io/docs/self-hosting/overview
+
+variables:
+  ADMIN_EMAIL:
+    description: Email of the first admin user — you sign in with it.
+  ADMIN_PASSWORD:
+    description: Password for that admin user.
+
+services:
+  db:
+    preset: postgres
+    env:
+      POSTGRES_DB: directus
+
+  directus:
+    name: Directus
+    image: directus/directus:12.5.0
+    port: 8055
+    public: true
+    healthcheck: /server/ping
+    # Uploaded files (the default local storage location).
+    volume:
+      path: /directus/uploads
+      sizeGb: 1
+    env:
+      SECRET: ${{secret(48)}}
+      PUBLIC_URL: ${{services.directus.url}}
+      DB_CLIENT: pg
+      DB_HOST: ${{services.db.host}}
+      DB_PORT: ${{services.db.port}}
+      DB_DATABASE: directus
+      DB_USER: postgres
+      DB_PASSWORD: ${{services.db.env.POSTGRES_PASSWORD}}
+      ADMIN_EMAIL: ${{vars.ADMIN_EMAIL}}
+      ADMIN_PASSWORD: ${{vars.ADMIN_PASSWORD}}
+      STORAGE_LOCATIONS: local
+      STORAGE_LOCAL_ROOT: /directus/uploads
+      TELEMETRY: "false"

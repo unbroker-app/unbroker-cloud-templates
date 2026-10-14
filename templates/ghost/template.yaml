@@ -1,0 +1,41 @@
+name: Ghost
+tagline: Publishing platform for blogs, newsletters and memberships
+category: cms
+tags: [blog, cms, newsletter, publishing]
+maintainer: Unbroker
+official: true
+links:
+  website: https://ghost.org
+  source: https://github.com/TryGhost/Ghost
+  docs: https://ghost.org/docs/
+
+services:
+  db:
+    preset: mysql
+    env:
+      MYSQL_DATABASE: ghost
+
+  ghost:
+    name: Ghost
+    image: ghost:6.70.0
+    port: 2368
+    public: true
+    healthcheck: /ghost/api/admin/site/
+    # Themes, images and uploaded files. Posts and members live in MySQL.
+    volume:
+      path: /var/lib/ghost/content
+      sizeGb: 1
+    # Ghost reads its config from lowercase, double-underscore variables
+    # (database__client…), and Unbroker Cloud variables are UPPER_SNAKE_CASE, so
+    # the start command maps one onto the other before the official entrypoint.
+    startCommand: >-
+      export url="$GHOST_URL" database__client=mysql
+      database__connection__host="$DB_HOST" database__connection__port="$DB_PORT"
+      database__connection__user=root database__connection__password="$DB_PASSWORD"
+      database__connection__database=ghost server__host=0.0.0.0 server__port=2368;
+      exec docker-entrypoint.sh node current/index.js
+    env:
+      GHOST_URL: ${{services.ghost.url}}
+      DB_HOST: ${{services.db.host}}
+      DB_PORT: ${{services.db.port}}
+      DB_PASSWORD: ${{services.db.env.MYSQL_ROOT_PASSWORD}}

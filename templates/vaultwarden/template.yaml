@@ -1,0 +1,35 @@
+name: Vaultwarden
+tagline: Bitwarden-compatible password manager server
+category: productivity
+tags: [passwords, security, bitwarden]
+maintainer: Unbroker
+official: true
+links:
+  website: https://github.com/dani-garcia/vaultwarden
+  source: https://github.com/dani-garcia/vaultwarden
+  docs: https://github.com/dani-garcia/vaultwarden/wiki
+
+variables:
+  SIGNUPS_ALLOWED:
+    description: Let anyone with the link create an account. Create yours, then set this to false on the service and redeploy.
+    required: false
+    default: "true"
+
+services:
+  vaultwarden:
+    name: Vaultwarden
+    image: vaultwarden/server:1.37.4
+    port: 8080
+    public: true
+    healthcheck: /alive
+    # The vault database (SQLite), attachments and the server's keys.
+    volume:
+      path: /data
+      sizeGb: 1
+    env:
+      DATA_FOLDER: /data
+      ROCKET_PORT: "8080"
+      DOMAIN: ${{services.vaultwarden.url}}
+      SIGNUPS_ALLOWED: ${{vars.SIGNUPS_ALLOWED}}
+      # Opens /admin. Read it from the service's variables after deploy.
+      ADMIN_TOKEN: ${{secret(48)}}
