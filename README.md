@@ -85,13 +85,14 @@ credentials for other services to reference:
 
 | Preset | Image | Port | Credential variable | User |
 |---|---|---|---|---|
-| `postgres` | `postgres:16` | 5432 | `POSTGRES_PASSWORD` | `postgres` |
+| `postgres` | `pgvector/pgvector:pg16` (Postgres 16 + pgvector) | 5432 | `POSTGRES_PASSWORD` | `postgres` |
 | `mysql` | `mysql:8` | 3306 | `MYSQL_ROOT_PASSWORD` | `root` |
 | `redis` | `redis:7` | 6379 | `REDIS_PASSWORD` | |
 | `mongodb` | `mongo:7` | 27017 | `MONGO_INITDB_ROOT_PASSWORD` | `root` |
 
 Set `POSTGRES_DB` / `MYSQL_DATABASE` in the preset's `env` to create your
-app's database on first boot.
+app's database on first boot. The Postgres preset ships the `vector` extension,
+so apps can `CREATE EXTENSION vector`.
 
 ## The runtime your image must tolerate
 
