@@ -1,0 +1,87 @@
+name: Outline
+tagline: Fast, collaborative knowledge base and wiki for your team
+category: productivity
+tags: [wiki, docs, knowledge-base, notion]
+maintainer: Unbroker
+official: true
+links:
+  website: https://www.getoutline.com
+  source: https://github.com/outline/outline
+  docs: https://docs.getoutline.com/s/hosting
+
+# Outline signs people in with a link sent by email, so it needs an SMTP server
+# (any transactional email provider works: Resend, Postmark, SES, Mailgun…).
+variables:
+  ADMIN_EMAIL:
+    description: Email of the first admin. You sign in with a link sent to this address.
+  ADMIN_NAME:
+    description: Name shown for that admin.
+    default: Admin
+  WORKSPACE_NAME:
+    description: Name of the workspace.
+    default: Wiki
+  SMTP_HOST:
+    description: SMTP server that sends the sign-in emails, e.g. smtp.resend.com.
+  SMTP_PORT:
+    description: SMTP port. 587 (STARTTLS) or 465 (TLS).
+    default: "587"
+  SMTP_SECURE:
+    description: '"true" for port 465 (TLS from the start), "false" for 587 (STARTTLS).'
+    default: "false"
+  SMTP_USERNAME:
+    description: SMTP username. Leave empty if the server needs no authentication.
+    required: false
+  SMTP_PASSWORD:
+    description: SMTP password or API key.
+    required: false
+  SMTP_FROM_EMAIL:
+    description: Sender of the sign-in emails, e.g. Outline <wiki@yourdomain.com>. The domain must be verified with your provider.
+
+services:
+  db:
+    preset: postgres
+    env:
+      POSTGRES_DB: outline
+
+  redis:
+    preset: redis
+
+  outline:
+    name: Outline
+    image: outlinewiki/outline:1.11.0
+    port: 3000
+    public: true
+    healthcheck: /_health
+    # Uploaded images and attachments. Documents live in Postgres.
+    volume:
+      path: /var/lib/outline/data
+      sizeGb: 5
+    # Outline wants SECRET_KEY as 64 hex characters; it is derived from a
+    # generated secret. A fresh Outline also lets whoever opens it first create
+    # the workspace, so once it is up a one-off script creates it with
+    # WORKSPACE_NAME and ADMIN_EMAIL, and stops the container if Outline
+    # rejects them. With a workspace in place it does nothing.
+    startCommand: >-
+      export SECRET_KEY=$(printf %s "$SECRET_SEED" | sha256sum | cut -c1-64);
+      node -e 'const u="http://127.0.0.1:"+process.env.PORT,e=process.env;(async()=>{for(;;){try{if((await fetch(u+"/_health")).ok)break}catch{}await new Promise(s=>setTimeout(s,2000))}const r=await fetch(u+"/api/installation.create",{method:"POST",redirect:"manual",headers:{"content-type":"application/json"},body:JSON.stringify({teamName:e.WORKSPACE_NAME,userName:e.ADMIN_NAME,userEmail:e.ADMIN_EMAIL})}),t=await r.text();if(r.status<400)console.log("Outline workspace created for "+e.ADMIN_EMAIL);else if(!t.includes("existing teams")){console.log("Outline setup failed ("+r.status+"): "+t);process.kill(1)}})()' &
+      exec node build/server/index.js
+    env:
+      URL: ${{services.outline.url}}
+      DATABASE_URL: postgres://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/outline
+      PGSSLMODE: disable
+      REDIS_URL: redis://:${{services.redis.env.REDIS_PASSWORD}}@${{services.redis.host}}:${{services.redis.port}}
+      SECRET_SEED: ${{secret(64)}}
+      UTILS_SECRET: ${{secret(64)}}
+      FILE_STORAGE: local
+      FILE_STORAGE_LOCAL_ROOT_DIR: /var/lib/outline/data
+      # HTTPS is terminated by Unbroker Cloud in front of the app.
+      FORCE_HTTPS: "false"
+      SMTP_HOST: ${{vars.SMTP_HOST}}
+      SMTP_PORT: ${{vars.SMTP_PORT}}
+      SMTP_SECURE: ${{vars.SMTP_SECURE}}
+      SMTP_USERNAME: ${{vars.SMTP_USERNAME}}
+      SMTP_PASSWORD: ${{vars.SMTP_PASSWORD}}
+      SMTP_FROM_EMAIL: ${{vars.SMTP_FROM_EMAIL}}
+      ADMIN_EMAIL: ${{vars.ADMIN_EMAIL}}
+      ADMIN_NAME: ${{vars.ADMIN_NAME}}
+      WORKSPACE_NAME: ${{vars.WORKSPACE_NAME}}
