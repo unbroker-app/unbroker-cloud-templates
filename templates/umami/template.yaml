@@ -1,0 +1,40 @@
+name: Umami
+tagline: Simple, privacy-focused web analytics, a Google Analytics alternative
+category: analytics
+tags: [analytics, privacy, web, gdpr]
+maintainer: Unbroker
+official: true
+links:
+  website: https://umami.is
+  source: https://github.com/umami-software/umami
+  docs: https://umami.is/docs
+
+variables:
+  ADMIN_PASSWORD:
+    description: Password for the admin account (at least 8 characters). It replaces Umami's default password on first boot.
+
+services:
+  db:
+    preset: postgres
+    env:
+      POSTGRES_DB: umami
+
+  umami:
+    name: Umami
+    image: ghcr.io/umami-software/umami:3.4.0
+    port: 3000
+    public: true
+    healthcheck: /api/heartbeat
+    # Umami seeds an admin/umami account and has no setting to change it. Once
+    # the server answers, a one-off script signs in with that default and sets
+    # ADMIN_PASSWORD through Umami's own API. If the default no longer works
+    # (already changed), it does nothing.
+    startCommand: >-
+      export PATH="$PWD/node_modules/.bin:$PATH" && node scripts/check-db.js &&
+      { node -e 'const u="http://127.0.0.1:"+process.env.PORT,post=(p,b,t)=>fetch(u+p,{method:"POST",headers:Object.assign({"content-type":"application/json"},t?{authorization:"Bearer "+t}:{}),body:JSON.stringify(b)});(async()=>{for(let i=0;i<180;i++){try{const r=await post("/api/auth/login",{username:"admin",password:"umami"});if(r.status===401)return;if(r.ok){const{token}=await r.json(),c=await post("/api/me/password",{currentPassword:"umami",newPassword:process.env.ADMIN_PASSWORD},token);console.log(c.ok?"admin password set":"could not set the admin password: "+c.status+" "+await c.text());return}}catch{}await new Promise(s=>setTimeout(s,1000))}})()' & } &&
+      exec node server.js
+    env:
+      DATABASE_URL: postgresql://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/umami
+      APP_SECRET: ${{secret(48)}}
+      ADMIN_PASSWORD: ${{vars.ADMIN_PASSWORD}}
+      DISABLE_TELEMETRY: "1"
