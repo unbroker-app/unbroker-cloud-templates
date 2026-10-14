@@ -17,8 +17,13 @@
 //                            name says EMAIL)
 //   setup(ctx)               runs once after the first boot; may return state
 //   verify(ctx, state)       runs after the first boot and after the restart
+//   sidecars                 [{ name, image, port, env? }]: helper containers
+//                            that are not part of the template (a mail catcher,
+//                            say), started first on the template's network.
+//                            The template reaches one at ubt-<slug>-<name>
+//                            and the test at ctx.sidecar(name).
 // ctx is { url(service), env(service), exec(service, argv), log(msg),
-//          http(service, path, init) → { status, headers, text, json } }.
+//          sidecar(name), http(service, path, init) → { status, headers, text, json } }.
 // Throw (or use ctx.assert) to fail.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -50,6 +55,9 @@ const answers = { ...(spec.vars ?? {}) };
 for (const [key, v] of Object.entries(template.variables))
   if (!(key in answers) && v.default === undefined && v.required)
     answers[key] = /EMAIL/.test(key) ? "e2e@example.com" : `E2e-${randomBytes(12).toString("hex")}`;
+
+const sidecarHost = (slug, name) => `ubt-${slug}-${name}`;
+const sidecars = {};
 
 const node = (args) => spawnSync("node", [join(ROOT, "scripts", "try.mjs"), slug, ...args], { stdio: "inherit" });
 const docker = (args) => spawnSync("docker", args, { encoding: "utf8" });
@@ -83,6 +91,7 @@ async function waitHealthy() {
 
 const ctx = {
   url: (name) => state.services[name].url,
+  sidecar: (name) => sidecars[name],
   env: (name) => state.services[name].env,
   log: (msg) => console.log(`  ${msg}`),
   assert(cond, msg) {
@@ -109,11 +118,14 @@ const ctx = {
 };
 
 function dumpLogs() {
-  if (!state) return;
-  for (const s of Object.values(state.services)) {
-    group(`logs: ${s.container}`);
-    if (!CI) console.log(`\n── logs: ${s.container}`);
-    const r = docker(["logs", "--tail", "300", s.container]);
+  const containers = [
+    ...Object.values(state?.services ?? {}).map((s) => s.container),
+    ...(spec.sidecars ?? []).map((s) => sidecarHost(slug, s.name)),
+  ];
+  for (const c of containers) {
+    group(`logs: ${c}`);
+    if (!CI) console.log(`\n── logs: ${c}`);
+    const r = docker(["logs", "--tail", "300", c]);
     console.log(r.stdout + r.stderr);
     endGroup();
   }
@@ -121,6 +133,21 @@ function dumpLogs() {
 
 let ok = false;
 try {
+  if (spec.sidecars?.length)
+    await step("sidecars", async () => {
+      const net = `ubt-${slug}`;
+      if (docker(["network", "inspect", net]).status !== 0) docker(["network", "create", net]);
+      for (const sc of spec.sidecars) {
+        const name = sidecarHost(slug, sc.name);
+        docker(["rm", "-f", name]);
+        const env = Object.entries(sc.env ?? {}).flatMap(([k, v]) => ["-e", `${k}=${v}`]);
+        const r = docker(["run", "-d", "--name", name, "--network", net, "-p", `127.0.0.1::${sc.port}`, ...env, sc.image]);
+        if (r.status !== 0) throw new Error(`sidecar ${sc.name}: ${r.stderr}`);
+        const hostPort = docker(["port", name, String(sc.port)]).stdout.trim().split("\n")[0].split(":").pop();
+        sidecars[sc.name] = `http://localhost:${hostPort}`;
+        console.log(`  ${sc.name} (${sc.image}) at ${sidecars[sc.name]}`);
+      }
+    });
   const sets = Object.entries(answers).flatMap(([k, v]) => ["--set", `${k}=${v}`]);
   await step("first boot", async () => {
     const r = node(sets);
@@ -144,7 +171,10 @@ try {
   console.error(`\n✗ ${error.stack ?? error}`);
   dumpLogs();
 } finally {
-  if (!keep) node(["--down"]);
+  if (!keep) {
+    for (const sc of spec.sidecars ?? []) docker(["rm", "-f", sidecarHost(slug, sc.name)]);
+    node(["--down"]);
+  }
 }
 console.log(ok ? `\n✓ ${slug} passed end-to-end` : `\n✗ ${slug} failed end-to-end`);
 process.exit(ok ? 0 : 1);
