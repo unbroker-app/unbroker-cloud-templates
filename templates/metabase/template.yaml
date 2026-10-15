@@ -38,21 +38,27 @@ services:
     volume:
       path: /data
       sizeGb: 1
-    # A fresh Metabase lets whoever opens it first create the admin. Once the
-    # API is up, a one-off script completes setup with ADMIN_EMAIL and
-    # ADMIN_PASSWORD; if Metabase rejects them, it stops the container so the
-    # setup page never sits open on a public URL. Once set up, it does nothing.
+    # A fresh Metabase lets whoever reaches it first create the admin, so on
+    # first boot it runs on an internal address (127.0.0.1:3999, never routed),
+    # setup is completed there with ADMIN_EMAIL and ADMIN_PASSWORD, and only then
+    # does the real server start on the public port. A marker on the volume
+    # skips this afterwards. If Metabase rejects the values, boot stops before
+    # the public port opens.
     startCommand: >-
-      mkdir -p /data/plugins /data/native;
-      ( u=http://127.0.0.1:3000; until p=$(curl -sf $u/api/session/properties); do sleep 2; done;
+      mkdir -p /data/plugins /data/native &&
+      if [ ! -f /data/.unbroker-setup-done ]; then
+      echo 'Completing Metabase setup before opening the public port...';
+      ( MB_JETTY_PORT=3999 MB_JETTY_HOST=127.0.0.1 exec /app/run_metabase.sh ) & mb=$!; u=http://127.0.0.1:3999;
+      until p=$(curl -sf $u/api/session/properties); do kill -0 $mb 2>/dev/null || { echo 'Metabase exited before it was ready'; exit 1; }; sleep 2; done;
       t=$(printf %s "$p" | sed -n 's/.*"setup-token":"\([^"]*\)".*/\1/p');
       if [ -n "$t" ]; then
       esc() { printf %s "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; };
       b="{\"token\":\"$t\",\"user\":{\"email\":\"$(esc "$ADMIN_EMAIL")\",\"password\":\"$(esc "$ADMIN_PASSWORD")\",\"first_name\":\"Admin\"},\"prefs\":{\"site_name\":\"Metabase\"}}";
-      r=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$b" $u/api/setup);
-      if [ "$r" = 200 ]; then echo 'Metabase admin created';
-      else echo "Metabase setup failed ($r):"; curl -s -H 'Content-Type: application/json' -d "$b" $u/api/setup; echo; kill 1; fi;
-      fi ) &
+      r=$(curl -s -o /tmp/mb-setup.json -w '%{http_code}' -H 'Content-Type: application/json' -d "$b" $u/api/setup);
+      if [ "$r" != 200 ]; then echo "Metabase setup failed ($r):"; cat /tmp/mb-setup.json; echo; kill $mb; exit 1; fi;
+      fi;
+      touch /data/.unbroker-setup-done; kill $mb; wait $mb; echo 'Metabase admin ready';
+      fi &&
       exec /app/run_metabase.sh
     env:
       MB_DB_TYPE: postgres
