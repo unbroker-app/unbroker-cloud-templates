@@ -212,9 +212,17 @@ for (const name of order.filter((n) => specs[n].public)) {
   else {
     ok = false;
     console.log(` ✗ (${status || "no answer"})`);
-    for (const n of order)
-      if (docker(["inspect", "-f", "{{.State.OOMKilled}}", cname(n)], { check: false }) === "true")
-        console.log(`  ${n} was OOM-killed: it needs more than its ${specs[n].memoryMiB} MiB memory limit`);
+    for (const n of order) {
+      const [oom, restarts, status] = docker(
+        ["inspect", "-f", "{{.State.OOMKilled}} {{.RestartCount}} {{.State.Status}}", cname(n)],
+        { check: false },
+      ).split(" ");
+      if (oom === "true" || restarts !== "0")
+        console.log(`  ${n}: ${status}, restarted ${restarts} time(s)${oom === "true" ? ", last exit OOM-killed" : ""} (limit ${specs[n].memoryMiB} MiB)`);
+    }
+    // Processes still alive in the unhealthy container, with their memory.
+    const top = spawnSync("docker", ["top", cname(name), "-o", "pid,rss,etime,args"], { encoding: "utf8" });
+    if (top.stdout) console.log(`  processes in ${name}:\n${top.stdout.replace(/^/gm, "    ")}`);
     const logs = spawnSync("docker", ["logs", "--tail", "60", cname(name)], { encoding: "utf8" });
     console.log(logs.stdout + logs.stderr);
   }
