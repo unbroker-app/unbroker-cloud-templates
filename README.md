@@ -38,9 +38,15 @@ links:
   source: https://github.com/miniflux/v2
 
 # Asked in the deploy form. required defaults to true; a default pre-fills it.
+# Rules (optional) make the form refuse a value the app would reject at boot.
 variables:
   ADMIN_PASSWORD:
     description: Password for the first admin account.
+    minLength: 8              # also maxLength
+  ADMIN_EMAIL:
+    description: Email of the first admin.
+    pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"   # a JS regex the whole value must match
+    patternMessage: must be an email address  # required with pattern
 
 services:
   db:
@@ -125,7 +131,9 @@ problems come from this:
 
 1. Copy the closest existing template into `templates/<slug>/`.
 2. Pin the image to a version, and keep the manifest minimal: only the variables
-   the app needs to boot securely.
+   the app needs to boot securely. Give each one the rules the app enforces
+   (length, format), so a bad value is refused in the deploy form instead of
+   failing the deploy.
 3. Validate it, then run it the way the platform would:
    ```bash
    npm install

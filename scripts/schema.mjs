@@ -88,6 +88,22 @@ const imageService = z
   })
   .strict();
 
+/**
+ * Why `value` breaks a variable's rules (minLength, maxLength, pattern), or
+ * null. Same check as Unbroker Cloud's deploy form and API
+ * (templates.rules.ts). An empty value is left to `required`.
+ */
+export function variableProblem(rules, value) {
+  if (!value) return null;
+  if (rules.minLength != null && value.length < rules.minLength)
+    return `must be at least ${rules.minLength} characters`;
+  if (rules.maxLength != null && value.length > rules.maxLength)
+    return `must be at most ${rules.maxLength} characters`;
+  if (rules.pattern != null && !new RegExp(rules.pattern, "u").test(value))
+    return rules.patternMessage ?? "has an invalid format";
+  return null;
+}
+
 const httpsUrl = z.string().url().startsWith("https://");
 
 export const templateSchema = z
@@ -110,8 +126,36 @@ export const templateSchema = z
             description: z.string().min(1).max(500),
             required: z.boolean().default(true),
             default: z.string().max(4000).optional(),
+            // What a value must look like; the deploy form refuses anything
+            // else, so a value the app would reject at boot never gets there.
+            minLength: z.number().int().min(1).max(4000).optional(),
+            maxLength: z.number().int().min(1).max(4000).optional(),
+            pattern: z
+              .string()
+              .min(1)
+              .max(300)
+              .refine((p) => {
+                try {
+                  new RegExp(p, "u");
+                  return true;
+                } catch {
+                  return false;
+                }
+              }, "not a valid regular expression")
+              .optional(),
+            patternMessage: z.string().min(1).max(200).optional(),
           })
-          .strict(),
+          .strict()
+          .superRefine((v, ctx) => {
+            const issue = (path, message) =>
+              ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+            if (v.minLength != null && v.maxLength != null && v.minLength > v.maxLength)
+              issue("maxLength", "must be at least minLength");
+            if (v.pattern != null && v.patternMessage == null)
+              issue("patternMessage", "say what the pattern asks for");
+            const problem = v.default ? variableProblem(v, v.default) : null;
+            if (problem) issue("default", `the default ${problem}`);
+          }),
       )
       .default({}),
     services: z
