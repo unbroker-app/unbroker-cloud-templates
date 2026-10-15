@@ -12,8 +12,11 @@ links:
 variables:
   ADMIN_EMAIL:
     description: Email of the first admin account. You sign in with it.
+    pattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    patternMessage: 'must be an email address, like you@example.com'
   ADMIN_PASSWORD:
     description: Password for that account. Metabase requires at least 15 characters and rejects common passwords.
+    minLength: 15
 
 services:
   db:
