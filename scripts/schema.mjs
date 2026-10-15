@@ -99,8 +99,15 @@ export function variableProblem(rules, value) {
     return `must be at least ${rules.minLength} characters`;
   if (rules.maxLength != null && value.length > rules.maxLength)
     return `must be at most ${rules.maxLength} characters`;
-  if (rules.pattern != null && !new RegExp(rules.pattern, "u").test(value))
-    return rules.patternMessage ?? "has an invalid format";
+  if (rules.pattern != null) {
+    // A pattern that doesn't compile is the schema's error to report, not the
+    // value's; it must not throw out of a validation.
+    let re = null;
+    try {
+      re = new RegExp(rules.pattern, "u");
+    } catch {}
+    if (re && !re.test(value)) return rules.patternMessage ?? "has an invalid format";
+  }
   return null;
 }
 
