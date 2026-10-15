@@ -53,10 +53,12 @@ services:
     public: true
     healthcheck: /_health
     # Web, collaboration and workers run in one Node process; it doesn't become
-    # healthy under the 256 MiB default.
+    # healthy under the 256 MiB default. A full CPU so the first boot (migrations
+    # and workspace on the internal port, then the public server) fits the 180 s
+    # rollout window.
     resources:
       memoryMiB: 1024
-      cpuMillicores: 500
+      cpuMillicores: 1000
     # Uploaded images and attachments. Documents live in Postgres.
     volume:
       path: /var/lib/outline/data
