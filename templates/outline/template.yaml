@@ -52,6 +52,11 @@ services:
     port: 3000
     public: true
     healthcheck: /_health
+    # Web, collaboration and workers run in one Node process; it doesn't become
+    # healthy under the 256 MiB default.
+    resources:
+      memoryMiB: 1024
+      cpuMillicores: 500
     # Uploaded images and attachments. Documents live in Postgres.
     volume:
       path: /var/lib/outline/data
