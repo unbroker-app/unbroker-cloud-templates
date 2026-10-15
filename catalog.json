@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "commit": "26deeef344f57b8de341ed4166d8253850952630",
-  "generatedAt": "2026-10-15T15:38:58.946Z",
+  "commit": "c4e9e9b65202d3133ced7e02671e3867a1c86d27",
+  "generatedAt": "2026-10-15T16:29:00.614Z",
   "templates": [
     {
       "slug": "clickhouse",
@@ -230,6 +230,136 @@
       },
       "logoUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMTUxNzFhIiByeD0iMTQiLz48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMzIgMTRjLTkuOTQgMC0xOCA4LjA2LTE4IDE4czguMDYgMTggMTggMTggMTgtOC4wNiAxOC0xOC04LjA2LTE4LTE4LTE4bS4zODQgMy40N2MzLjcwNS4wMDcgNy42NzQgMy4wMTIgOC44NDcgNC40NDNsLjM2Ni40NWMyLjQ2IDIuOTkgNS4zNTQgNi41MSA1LjM1NCAxMC40NDkgMCA1LjU3OC00LjQ3IDguNzEyLTkuMjM3IDExLjI2Mi0yLjE1IDEuMTQ5LTQuNDcgMi4yNjItNy4xMjIgMi4yNjItNi44MTUgMC0xMi41NS01LjM1NC0xMi41NS0xMi4xNjggMC0xLjA2LjI1Ni0yLjEzOC41MTQtMy4yMjUuMTgzLS43NzMuMzY2LTEuNTUuNDYtMi4zMjQuODIyLTYuODA4IDQuNDUtMTAuMTkyIDEyLjYzMy0xMS4xMTJhNiA2IDAgMCAxIC43MzUtLjAzOVoiLz48L3N2Zz4=",
       "readme": "# Ghost\n\nA professional publishing platform: a modern editor, newsletters, paid\nmemberships and themes.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Ghost** | `ghost:6.70.0` | Public. 1 GiB volume for themes, images and uploads |\n| **db** | MySQL 8 | Internal. Posts, members and settings |\n\n## After deploy\n\nGo to `<your-url>/ghost` and create the **owner account**. The first visitor to\nthat page gets it, so do this right away.\n\n## Notes\n\n- **Email.** Staff invites, password resets and newsletters need an SMTP or\n  Mailgun account. Ghost reads its config from lowercase variables, so add yours\n  to the `export …` line of the service's start command, e.g.\n  `mail__transport=SMTP mail__options__host=…`.\n- **Custom domain.** Ghost builds every link from its `url`. After you add a\n  domain, set `GHOST_URL` to it and redeploy.\n"
+    },
+    {
+      "slug": "mailcheap",
+      "name": "MailCheap",
+      "tagline": "Newsletters where you pay for the emails you send, not for dormant subscribers",
+      "category": "productivity",
+      "tags": [
+        "newsletter",
+        "email",
+        "marketing",
+        "mcp"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://mailcheap.ai",
+        "source": "https://github.com/marclou/mailcheap",
+        "docs": "https://github.com/marclou/mailcheap#self-hosting"
+      },
+      "variables": {
+        "ADMIN_EMAIL": {
+          "description": "Your email. You sign in to MailCheap with a code sent here, and it can open /admin.",
+          "required": true,
+          "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+          "patternMessage": "must be an email address, like you@example.com"
+        },
+        "ALLOWED_EMAILS": {
+          "description": "Who else can sign in, comma-separated addresses and whole domains, e.g. jane@example.com, @example.org.",
+          "required": false
+        },
+        "EMAIL_FROM": {
+          "description": "From address of sign-in codes and alerts, e.g. MailCheap <login@mail.example.com>. Its domain must be verified at Resend or Amazon SES.",
+          "required": true,
+          "pattern": "^([^<>]*<[^@\\s<>]+@[^@\\s<>]+\\.[^@\\s<>]+>|[^@\\s<>]+@[^@\\s<>]+\\.[^@\\s<>]+)$",
+          "patternMessage": "must be an email address, optionally with a name: MailCheap <login@example.com>"
+        },
+        "RESEND_API_KEY": {
+          "description": "Resend API key for sign-in codes and alerts. Without it, they go through Amazon SES.",
+          "required": false
+        },
+        "SES_REGION": {
+          "description": "AWS region of your Amazon SES account.",
+          "required": true,
+          "default": "us-east-1",
+          "pattern": "^[a-z]{2}(-[a-z]+)+-[0-9]$",
+          "patternMessage": "must be an AWS region, like us-east-1"
+        },
+        "SES_ACCESS_KEY_ID": {
+          "description": "Access key of the IAM user MailCheap sends through Amazon SES with.",
+          "required": false
+        },
+        "SES_SECRET_ACCESS_KEY": {
+          "description": "Secret of that access key.",
+          "required": false
+        },
+        "SES_AWS_ACCOUNT_ID": {
+          "description": "The 12-digit ID of that AWS account.",
+          "required": false,
+          "pattern": "^[0-9]{12}$",
+          "patternMessage": "must be the 12-digit AWS account ID"
+        },
+        "SES_SNS_TOPIC_ARN": {
+          "description": "ARN of the SNS topic that receives bounces, complaints and deliveries, subscribed to https://<your-app>/api/webhooks/ses.",
+          "required": false,
+          "pattern": "^arn:aws[a-z-]*:sns:[a-z0-9-]+:[0-9]{12}:[A-Za-z0-9_-]+$",
+          "patternMessage": "must be an SNS topic ARN, like arn:aws:sns:us-east-1:123456789012:mailcheap-ses-events"
+        },
+        "QSTASH_TOKEN": {
+          "description": "Upstash QStash token. QStash runs background sending and scheduling.",
+          "required": false
+        },
+        "QSTASH_CURRENT_SIGNING_KEY": {
+          "description": "QStash current signing key.",
+          "required": false
+        },
+        "QSTASH_NEXT_SIGNING_KEY": {
+          "description": "QStash next signing key.",
+          "required": false
+        },
+        "SENDING_ENABLED": {
+          "description": "\"true\" lets emails reach readers. Leave \"false\" until your domain and email provider are set up.",
+          "required": true,
+          "default": "false",
+          "pattern": "^(true|false)$",
+          "patternMessage": "must be true or false"
+        }
+      },
+      "services": {
+        "db": {
+          "preset": "mongodb",
+          "volumeSizeGb": 1,
+          "resources": {
+            "memoryMiB": 448
+          },
+          "env": {}
+        },
+        "mailcheap": {
+          "name": "MailCheap",
+          "image": "ghcr.io/unbroker-app/mailcheap-container:sha-6225f69e3c98b42745fab34d827f7b5ed4d3c63c",
+          "port": 3000,
+          "public": true,
+          "healthcheck": "/api/health",
+          "resources": {
+            "memoryMiB": 320,
+            "cpuMillicores": 350
+          },
+          "env": {
+            "MONGODB_URI": "mongodb://root:${{services.db.env.MONGO_INITDB_ROOT_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/mailcheap?authSource=admin",
+            "APP_URL": "${{services.mailcheap.url}}",
+            "BETTER_AUTH_SECRET": "${{secret(64)}}",
+            "SUPPRESSION_HASH_KEY": "${{secret(64)}}",
+            "ADMIN_EMAILS": "${{vars.ADMIN_EMAIL}}",
+            "ALLOWED_EMAILS": "${{vars.ALLOWED_EMAILS}}",
+            "EMAIL_FROM": "${{vars.EMAIL_FROM}}",
+            "RESEND_API_KEY": "${{vars.RESEND_API_KEY}}",
+            "EMAIL_PROVIDER": "ses",
+            "SES_REGION": "${{vars.SES_REGION}}",
+            "SES_ACCESS_KEY_ID": "${{vars.SES_ACCESS_KEY_ID}}",
+            "SES_SECRET_ACCESS_KEY": "${{vars.SES_SECRET_ACCESS_KEY}}",
+            "SES_AWS_ACCOUNT_ID": "${{vars.SES_AWS_ACCOUNT_ID}}",
+            "SES_SNS_TOPIC_ARN": "${{vars.SES_SNS_TOPIC_ARN}}",
+            "QSTASH_TOKEN": "${{vars.QSTASH_TOKEN}}",
+            "QSTASH_CURRENT_SIGNING_KEY": "${{vars.QSTASH_CURRENT_SIGNING_KEY}}",
+            "QSTASH_NEXT_SIGNING_KEY": "${{vars.QSTASH_NEXT_SIGNING_KEY}}",
+            "SENDING_ENABLED": "${{vars.SENDING_ENABLED}}"
+          }
+        }
+      },
+      "logoUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjExIDkgNDUgNDUiPjxzdHlsZT5wYXRoe2ZpbGw6IzBhMGEwYX1AbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOmRhcmspe3BhdGh7ZmlsbDojZmFmYWZhfX08L3N0eWxlPjxwYXRoIGQ9Im0xMyAzMSAzOS0xNy0yMSAyM1oiLz48cGF0aCBmaWxsLW9wYWNpdHk9Ii4zNSIgZD0ibTMxIDM3IDIxLTIzLTEwLjUgMzZaIi8+PC9zdmc+",
+      "readme": "# MailCheap\n\nA newsletter app where you pay your email provider for the emails you send,\nnot a platform for every subscriber on your list. Write an issue, send it to\nyour list and publish it on the web, from the dashboard or from an AI agent\nthrough its MCP server and REST API. Imports beehiiv, Substack, Mailchimp, Kit\nand other CSV exports as they are.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **MailCheap** | `ghcr.io/unbroker-app/mailcheap-container` | Public. The upstream app, built from a pinned commit by [mailcheap-container](https://github.com/unbroker-app/mailcheap-container) |\n| **db** | MongoDB 7 | Internal. Accounts, contacts, campaigns and stats |\n\nThe session secret and the key of the never-email list are generated for you.\nDon't change them later: the first signs everyone out and breaks the links in\nemails already sent, the second empties the list.\n\n## Before you deploy\n\nMailCheap signs you in with a code it emails, so it needs a way to send email\nfrom the first minute. Pick one:\n\n- **Resend** (quickest): verify the domain of `EMAIL_FROM` at\n  [Resend](https://resend.com) and fill in `RESEND_API_KEY`.\n- **Amazon SES**: fill in the `SES_*` fields and verify the domain of\n  `EMAIL_FROM` in that AWS account (Identities, Easy DKIM).\n\nWithout either, the app runs but nobody can sign in.\n\n## After deploy\n\n1. Open the app's URL and sign in with `ADMIN_EMAIL`. Only that address and the\n   ones in `ALLOWED_EMAILS` can sign in.\n2. To send to readers, follow upstream's\n   [self-hosting guide](https://github.com/marclou/mailcheap#self-hosting),\n   steps 4 to 6, with your app's URL in place of the Vercel one:\n   - **Amazon SES**: production access, an SNS topic subscribed to\n     `https://<your-app>/api/webhooks/ses`, and an IAM user with the policy the\n     guide lists. Fill in the `SES_*` variables.\n   - **Upstash QStash**: fill in `QSTASH_TOKEN` and the two signing keys. QStash\n     calls your app back over the internet to send each batch.\n   - Add your sending domain under **Domains**, create a newsletter, then set\n     `SENDING_ENABLED` to `true`.\n\nUntil `SENDING_ENABLED` is `true`, nothing reaches readers. Sign-in codes and\nalerts go out either way.\n\n## Caveats\n\n- **Amazon SES only.** The template sets `EMAIL_PROVIDER=ses`. For PostShiba\n  (invite only), change it to `postshiba` and add the `POSTSHIBA_*` variables\n  from upstream's [`.env.example`](https://github.com/marclou/mailcheap/blob/main/.env.example).\n- **Image uploads are off** until you add an S3 bucket behind CloudFront\n  (`IMAGES_S3_*`, `IMAGES_CDN_URL`) or a Vercel Blob token. Campaigns can still\n  use images hosted anywhere.\n- **Rate limits are per container.** Upstash Redis (`UPSTASH_REDIS_REST_*`)\n  shares them, but it only matters with more than one instance.\n- **Built-in pages show a placeholder URL.** The docs pages, `robots.txt`,\n  `sitemap.xml` and `llms.txt` are rendered when the image is built, before\n  your URL exists, so they show `http://localhost:3000`. Email links, sign-in,\n  the API and MCP use your real URL.\n- Google sign-in, Telegram alerts and the other optional settings in upstream's\n  `.env.example` can be added as variables on the service.\n"
     },
     {
       "slug": "memos",
