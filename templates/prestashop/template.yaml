@@ -38,6 +38,11 @@ services:
     port: 8080
     public: true
     healthcheck: /
+    # The first boot downloads and installs PrestaShop (PHP, no memory limit) before
+    # Apache starts; a full CPU keeps that inside the 180 s rollout window.
+    resources:
+      memoryMiB: 1024
+      cpuMillicores: 1000
     # The whole store: PrestaShop's code (it rewrites its own files: cache,
     # modules, themes, the 1-click upgrade), product images and uploads.
     volume:
