@@ -1,0 +1,107 @@
+name: PrestaShop
+tagline: Open-source e-commerce platform to build and run your online store
+category: cms
+tags: [ecommerce, shop, php, store]
+maintainer: Unbroker
+official: true
+links:
+  website: https://prestashop-project.org
+  source: https://github.com/PrestaShop/PrestaShop
+  docs: https://docs.prestashop-project.org
+
+variables:
+  SHOP_NAME:
+    description: Name of your store.
+    default: My Store
+  ADMIN_EMAIL:
+    description: Email of the back-office admin. You sign in with it.
+    pattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    patternMessage: 'must be an email address, like you@example.com'
+  ADMIN_PASSWORD:
+    description: Password for that admin (at least 8 characters).
+    minLength: 8
+    maxLength: 72
+  ADMIN_FOLDER:
+    description: Secret folder name for the back office, e.g. admin-k3x9q (letters, digits and dashes). Your back office will live at /<this folder>, so don't use "admin".
+    pattern: '^(?!admin$)[A-Za-z0-9_-]+$'
+    patternMessage: 'must be letters, digits, dashes or underscores, and not "admin"'
+  SHOP_COUNTRY:
+    description: Two-letter code of your store's country (sets currency, taxes and address formats), e.g. us, es, fr, ar.
+    default: us
+    pattern: '^[a-z]{2}$'
+    patternMessage: 'must be a two-letter lowercase country code, like us or ar'
+  SHOP_LANGUAGE:
+    description: Two-letter code of the store's language, e.g. en, es, fr.
+    default: en
+    pattern: '^[a-z]{2}$'
+    patternMessage: 'must be a two-letter lowercase language code, like en or es'
+
+services:
+  db:
+    preset: mysql
+    env:
+      MYSQL_DATABASE: prestashop
+
+  prestashop:
+    name: PrestaShop
+    image: prestashop/prestashop:9.2.0-apache
+    port: 8080
+    public: true
+    healthcheck: /
+    # The first boot downloads and installs PrestaShop (PHP, no memory limit) before
+    # Apache starts; a full CPU keeps that inside the 180 s rollout window.
+    resources:
+      memoryMiB: 1024
+      cpuMillicores: 1000
+    # The whole store: PrestaShop's code (it rewrites its own files: cache,
+    # modules, themes, the 1-click upgrade), product images and uploads.
+    volume:
+      path: /var/www/html
+      sizeGb: 5
+    # The image keeps PrestaShop and its setup script under /tmp, which the
+    # platform replaces with a scratch dir, so first boot downloads the same
+    # release (checked against its sha256) onto the volume and runs the CLI
+    # installer on a fresh database, then renames the back office (which the
+    # installer names admin<random>) to ADMIN_FOLDER. An interrupted install
+    # starts over on the next boot. Apache runs from
+    # a copy of its config that listens on 8080 and keeps its runtime files in
+    # /tmp, so it works without root.
+    startCommand: >-
+      set -e; H=/var/www/html;
+      case "$ADMIN_FOLDER" in admin|''|*[!A-Za-z0-9_-]*) echo "ADMIN_FOLDER must be letters, digits, dashes or underscores, and not admin"; exit 1;; esac;
+      if [ ! -f $H/.unbroker-installed ]; then
+      echo 'Installing PrestaShop 9.2.0 on the volume...';
+      find $H -mindepth 1 -delete;
+      wget -q -O $H/ps.zip "$PS_ZIP_URL"; echo "$PS_ZIP_SHA256  $H/ps.zip" | sha256sum -c -;
+      unzip -q $H/ps.zip prestashop.zip -d $H; unzip -q $H/prestashop.zip -d $H; rm $H/ps.zip $H/prestashop.zip;
+      until php -r '(new PDO("mysql:host=".getenv("DB_SERVER").";port=".getenv("DB_PORT"), "root", getenv("DB_PASSWD")))->exec("DROP DATABASE IF EXISTS prestashop; CREATE DATABASE prestashop");' 2>/dev/null; do echo 'Waiting for MySQL...'; sleep 3; done;
+      case "$SHOP_URL" in https://*) SSL=1;; *) SSL=0;; esac;
+      php -d memory_limit=-1 $H/install/index_cli.php --domain="$(echo "$SHOP_URL" | sed -E 's#^https?://##; s#/.*##')" --ssl=$SSL
+      --db_server="$DB_SERVER:$DB_PORT" --db_name=prestashop --db_user=root --db_password="$DB_PASSWD" --prefix=ps_
+      --name="$SHOP_NAME" --email="$ADMIN_EMAIL" --password="$ADMIN_PASSWORD" --firstname=Store --lastname=Admin
+      --country="$SHOP_COUNTRY" --language="$SHOP_LANGUAGE" --fixtures=0 --newsletter=0 --send_email=0;
+      rm -rf $H/install; A=$(find $H -maxdepth 1 -type d -name 'admin*' ! -name admin-api | head -n 1);
+      [ "$A" = "$H/$ADMIN_FOLDER" ] || mv "$A" "$H/$ADMIN_FOLDER"; touch $H/.unbroker-installed;
+      echo "PrestaShop installed. Back office: $SHOP_URL/$ADMIN_FOLDER";
+      fi;
+      rm -rf /tmp/apache2 && cp -r /etc/apache2 /tmp/apache2 &&
+      sed -i 's/^Listen 80$/Listen 8080/' /tmp/apache2/ports.conf &&
+      sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8080>/' /tmp/apache2/sites-available/000-default.conf &&
+      exec apache2-foreground -d /tmp/apache2
+    env:
+      SHOP_URL: ${{services.prestashop.url}}
+      SHOP_NAME: ${{vars.SHOP_NAME}}
+      SHOP_COUNTRY: ${{vars.SHOP_COUNTRY}}
+      SHOP_LANGUAGE: ${{vars.SHOP_LANGUAGE}}
+      ADMIN_EMAIL: ${{vars.ADMIN_EMAIL}}
+      ADMIN_PASSWORD: ${{vars.ADMIN_PASSWORD}}
+      ADMIN_FOLDER: ${{vars.ADMIN_FOLDER}}
+      DB_SERVER: ${{services.db.host}}
+      DB_PORT: ${{services.db.port}}
+      DB_PASSWD: ${{services.db.env.MYSQL_ROOT_PASSWORD}}
+      PS_ZIP_URL: https://api.prestashop-project.org/assets/prestashop-classic/9.2.0-6.0/prestashop.zip
+      PS_ZIP_SHA256: 81e1719181c4ebe29d54c7e914bc571f1883dd4cfd216f5b28bd30af5757105f
+      APACHE_CONFDIR: /tmp/apache2
+      APACHE_RUN_DIR: /tmp/apache2-run
+      APACHE_LOCK_DIR: /tmp/apache2-lock
+      APACHE_PID_FILE: /tmp/apache2-run/apache2.pid
