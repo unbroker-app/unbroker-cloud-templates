@@ -108,6 +108,11 @@ problems come from this:
   on all interfaces, above 1024.
 - **Variable names are `UPPER_SNAKE_CASE`.** If an app reads lowercase
   config, map it in `startCommand` (see [`ghost`](templates/ghost/template.yaml)).
+- **Memory and CPU are capped** by default: 256 MiB and 0.25 CPU for an app,
+  384 MiB for a database preset, 128 MiB for Redis. A service that goes over
+  its memory is OOM-killed, and a rollout must become healthy within 180 s.
+  Templates can't raise these yet, so tune the app to fit (smaller heaps,
+  fewer workers) and say in its README when it needs more.
 - **Containers restart on failure**, and datastores deploy before the apps
   that reference them, so an app may briefly start before its database
   accepts connections.
@@ -124,8 +129,9 @@ problems come from this:
    npm run try -- <slug> --set KEY=value     # needs Docker
    npm run try -- <slug> --down
    ```
-   `try` drops privileges, pins `HOME`, mounts the volume like a cluster disk,
-   resolves every token, and waits for each public service's healthcheck.
+   `try` drops privileges, pins `HOME`, applies the default memory and CPU
+   limits, mounts the volume like a cluster disk, resolves every token, and
+   waits up to 180 s for each public service's healthcheck.
 4. Make sure it works past the healthcheck: sign in, create something, restart
    the container, and confirm the data is still there. Write that down as
    `scripts/e2e/<slug>.mjs` (see [`miniflux`](scripts/e2e/miniflux.mjs)) so CI
