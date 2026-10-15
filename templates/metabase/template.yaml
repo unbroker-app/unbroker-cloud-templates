@@ -49,12 +49,14 @@ services:
       if [ ! -f /data/.unbroker-setup-done ]; then
       echo 'Completing Metabase setup before opening the public port...';
       ( MB_JETTY_PORT=3999 MB_JETTY_HOST=127.0.0.1 exec /app/run_metabase.sh ) & mb=$!; u=http://127.0.0.1:3999;
-      until p=$(curl -sf $u/api/session/properties); do kill -0 $mb 2>/dev/null || { echo 'Metabase exited before it was ready'; exit 1; }; sleep 2; done;
+      n=0; until p=$(curl -sf -m 10 $u/api/session/properties); do kill -0 $mb 2>/dev/null || { echo 'Metabase exited before it was ready'; exit 1; };
+      n=$((n+1)); [ $n -lt 240 ] || { echo 'Metabase did not answer on its internal port within 8 minutes. Is the service short on memory or CPU?'; kill -9 $mb; exit 1; };
+      [ $((n % 15)) -ne 0 ] || echo "Still waiting for the internal Metabase ($((n*2))s)..."; sleep 2; done; echo "Internal Metabase ready after $((n*2))s";
       t=$(printf %s "$p" | sed -n 's/.*"setup-token":"\([^"]*\)".*/\1/p');
       if [ -n "$t" ]; then
       esc() { printf %s "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; };
       b="{\"token\":\"$t\",\"user\":{\"email\":\"$(esc "$ADMIN_EMAIL")\",\"password\":\"$(esc "$ADMIN_PASSWORD")\",\"first_name\":\"Admin\"},\"prefs\":{\"site_name\":\"Metabase\"}}";
-      r=$(curl -s -o /tmp/mb-setup.json -w '%{http_code}' -H 'Content-Type: application/json' -d "$b" $u/api/setup);
+      r=$(curl -s -m 120 -o /tmp/mb-setup.json -w '%{http_code}' -H 'Content-Type: application/json' -d "$b" $u/api/setup);
       if [ "$r" != 200 ]; then echo "Metabase setup failed ($r):"; cat /tmp/mb-setup.json; echo; kill $mb; exit 1; fi;
       fi;
       touch /data/.unbroker-setup-done; kill $mb; wait $mb; echo 'Metabase admin ready';
