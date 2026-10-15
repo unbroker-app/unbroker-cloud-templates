@@ -67,6 +67,10 @@ variables:
 services:
   db:
     preset: mongodb
+    # MongoDB sizes its WiredTiger cache at 256 MB under any limit below 1.5 GB.
+    # With 100k contacts mongod held ~345 MiB, too close to the 384 MiB default.
+    resources:
+      memoryMiB: 448
 
   mailcheap:
     name: MailCheap
@@ -77,11 +81,12 @@ services:
     public: true
     # 503, with the reason, while a secret is missing or too short.
     healthcheck: /api/health
-    # Next.js with Mongoose, Better Auth and the AWS SDK: over the 256 MiB
-    # default once it serves the dashboard.
+    # Measured with 100k contacts, 10 campaigns and 20 parallel page loads: a
+    # ~195 MiB peak. 256 MiB fits with little room, and 250m makes every page
+    # 2-3x slower.
     resources:
-      memoryMiB: 512
-      cpuMillicores: 500
+      memoryMiB: 320
+      cpuMillicores: 350
     env:
       MONGODB_URI: mongodb://root:${{services.db.env.MONGO_INITDB_ROOT_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/mailcheap?authSource=admin
       APP_URL: ${{services.mailcheap.url}}
