@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "commit": "dcd2a17314237278583b812a4afcde6a01667e78",
-  "generatedAt": "2026-10-15T15:32:01.069Z",
+  "commit": "26deeef344f57b8de341ed4166d8253850952630",
+  "generatedAt": "2026-10-15T15:38:58.946Z",
   "templates": [
     {
       "slug": "clickhouse",
@@ -661,6 +661,109 @@
       },
       "logoUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgdmlld0JveD0iMCAwIDI0IDI0Ij48c3R5bGU+QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTpkYXJrKXtwYXRoe3N0cm9rZTojZTRlNGU3fX08L3N0eWxlPjxwYXRoIHN0cm9rZS13aWR0aD0iMiIgZD0ibTE2IDYtOC40MTQgOC41ODZhMiAyIDAgMCAwIDIuODI5IDIuODI5bDguNDE0LTguNTg2YTQgNCAwIDEgMC01LjY1Ny01LjY1N2wtOC4zNzkgOC41NTFhNiA2IDAgMSAwIDguNDg1IDguNDg1bDguMzc5LTguNTUxIiBzdHlsZT0ic3Ryb2tlOiMxODE4MWIiLz48L3N2Zz4=",
       "readme": "# Paperclip\n\nOpen-source orchestration for teams of AI agents. Set a company goal, hire\nagents (Claude Code, Codex, Gemini, OpenCode or any HTTP/bash agent) into an\norg chart, give them budgets, and track their work as tickets, all from one\ndashboard.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **Paperclip** | `ghcr.io/paperclipai/paperclip:2026.1012.0` | Public. Migrations run on boot. 10 GB volume for agent workspaces and data |\n| **db** | PostgreSQL 16 | Internal. Companies, agents, tickets, budgets |\n\nIt runs in Paperclip's `authenticated` + `public` mode: everything requires\nsigning in.\n\n## After deploy: claim the instance\n\nPublic Paperclip instances get their first admin through a **one-time invite\nlink**, not a setup page anyone could reach first:\n\n1. Open the **Paperclip service's logs** and find the line\n   `Claim this Paperclip instance (valid 72 hours): https://…/invite/pcp_bootstrap_…`.\n2. Open that link, create your account, and accept the invite. You are now the\n   instance admin.\n3. Create your first company and hire agents.\n\nThe link works once. If it expires before you use it, restart the service: a new\none is printed (and the old one stops working). Once the instance has an\nadmin, nothing is printed.\n\n## Good to know\n\n- **Agents need model credentials.** Add your Anthropic, OpenAI or other API\n  keys in Paperclip. They are encrypted with a key generated at deploy.\n  Sign-ins made by the bundled CLIs are kept on the volume.\n- Agents run **inside this container**, with its CPU and memory. The service\n  starts with **2 GB and 1 CPU** (2 GB is the most memory a service can have). That is\n  enough for a few agents at a time; upstream recommends 4 GB for more.\n- Anyone who finds the URL can create an account, but an account sees nothing\n  until an admin invites it to a company.\n"
+    },
+    {
+      "slug": "prestashop",
+      "name": "PrestaShop",
+      "tagline": "Open-source e-commerce platform to build and run your online store",
+      "category": "cms",
+      "tags": [
+        "ecommerce",
+        "shop",
+        "php",
+        "store"
+      ],
+      "maintainer": "Unbroker",
+      "official": true,
+      "links": {
+        "website": "https://prestashop-project.org",
+        "source": "https://github.com/PrestaShop/PrestaShop",
+        "docs": "https://docs.prestashop-project.org"
+      },
+      "variables": {
+        "SHOP_NAME": {
+          "description": "Name of your store.",
+          "required": true,
+          "default": "My Store"
+        },
+        "ADMIN_EMAIL": {
+          "description": "Email of the back-office admin. You sign in with it.",
+          "required": true,
+          "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+          "patternMessage": "must be an email address, like you@example.com"
+        },
+        "ADMIN_PASSWORD": {
+          "description": "Password for that admin (at least 8 characters).",
+          "required": true,
+          "minLength": 8,
+          "maxLength": 72
+        },
+        "ADMIN_FOLDER": {
+          "description": "Secret folder name for the back office, e.g. admin-k3x9q (letters, digits and dashes). Your back office will live at /<this folder>, so don't use \"admin\".",
+          "required": true,
+          "pattern": "^(?!admin$)[A-Za-z0-9_-]+$",
+          "patternMessage": "must be letters, digits, dashes or underscores, and not \"admin\""
+        },
+        "SHOP_COUNTRY": {
+          "description": "Two-letter code of your store's country (sets currency, taxes and address formats), e.g. us, es, fr, ar.",
+          "required": true,
+          "default": "us",
+          "pattern": "^[a-z]{2}$",
+          "patternMessage": "must be a two-letter lowercase country code, like us or ar"
+        },
+        "SHOP_LANGUAGE": {
+          "description": "Two-letter code of the store's language, e.g. en, es, fr.",
+          "required": true,
+          "default": "en",
+          "pattern": "^[a-z]{2}$",
+          "patternMessage": "must be a two-letter lowercase language code, like en or es"
+        }
+      },
+      "services": {
+        "db": {
+          "preset": "mysql",
+          "volumeSizeGb": 1,
+          "env": {
+            "MYSQL_DATABASE": "prestashop"
+          }
+        },
+        "prestashop": {
+          "name": "PrestaShop",
+          "image": "prestashop/prestashop:9.2.0-apache",
+          "port": 8080,
+          "public": true,
+          "startCommand": "set -e; H=/var/www/html; case \"$ADMIN_FOLDER\" in admin|''|*[!A-Za-z0-9_-]*) echo \"ADMIN_FOLDER must be letters, digits, dashes or underscores, and not admin\"; exit 1;; esac; if [ ! -f $H/.unbroker-installed ]; then echo 'Installing PrestaShop 9.2.0 on the volume...'; find $H -mindepth 1 -delete; wget -q -O $H/ps.zip \"$PS_ZIP_URL\"; echo \"$PS_ZIP_SHA256  $H/ps.zip\" | sha256sum -c -; unzip -q $H/ps.zip prestashop.zip -d $H; unzip -q $H/prestashop.zip -d $H; rm $H/ps.zip $H/prestashop.zip; until php -r '(new PDO(\"mysql:host=\".getenv(\"DB_SERVER\").\";port=\".getenv(\"DB_PORT\"), \"root\", getenv(\"DB_PASSWD\")))->exec(\"DROP DATABASE IF EXISTS prestashop; CREATE DATABASE prestashop\");' 2>/dev/null; do echo 'Waiting for MySQL...'; sleep 3; done; case \"$SHOP_URL\" in https://*) SSL=1;; *) SSL=0;; esac; php -d memory_limit=-1 $H/install/index_cli.php --domain=\"$(echo \"$SHOP_URL\" | sed -E 's#^https?://##; s#/.*##')\" --ssl=$SSL --db_server=\"$DB_SERVER:$DB_PORT\" --db_name=prestashop --db_user=root --db_password=\"$DB_PASSWD\" --prefix=ps_ --name=\"$SHOP_NAME\" --email=\"$ADMIN_EMAIL\" --password=\"$ADMIN_PASSWORD\" --firstname=Store --lastname=Admin --country=\"$SHOP_COUNTRY\" --language=\"$SHOP_LANGUAGE\" --fixtures=0 --newsletter=0 --send_email=0; rm -rf $H/install; A=$(find $H -maxdepth 1 -type d -name 'admin*' ! -name admin-api | head -n 1); [ \"$A\" = \"$H/$ADMIN_FOLDER\" ] || mv \"$A\" \"$H/$ADMIN_FOLDER\"; touch $H/.unbroker-installed; echo \"PrestaShop installed. Back office: $SHOP_URL/$ADMIN_FOLDER\"; fi; rm -rf /tmp/apache2 && cp -r /etc/apache2 /tmp/apache2 && sed -i 's/^Listen 80$/Listen 8080/' /tmp/apache2/ports.conf && sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:8080>/' /tmp/apache2/sites-available/000-default.conf && exec apache2-foreground -d /tmp/apache2",
+          "healthcheck": "/",
+          "volume": {
+            "path": "/var/www/html",
+            "sizeGb": 5
+          },
+          "resources": {
+            "memoryMiB": 1024,
+            "cpuMillicores": 1000
+          },
+          "env": {
+            "SHOP_URL": "${{services.prestashop.url}}",
+            "SHOP_NAME": "${{vars.SHOP_NAME}}",
+            "SHOP_COUNTRY": "${{vars.SHOP_COUNTRY}}",
+            "SHOP_LANGUAGE": "${{vars.SHOP_LANGUAGE}}",
+            "ADMIN_EMAIL": "${{vars.ADMIN_EMAIL}}",
+            "ADMIN_PASSWORD": "${{vars.ADMIN_PASSWORD}}",
+            "ADMIN_FOLDER": "${{vars.ADMIN_FOLDER}}",
+            "DB_SERVER": "${{services.db.host}}",
+            "DB_PORT": "${{services.db.port}}",
+            "DB_PASSWD": "${{services.db.env.MYSQL_ROOT_PASSWORD}}",
+            "PS_ZIP_URL": "https://api.prestashop-project.org/assets/prestashop-classic/9.2.0-6.0/prestashop.zip",
+            "PS_ZIP_SHA256": "81e1719181c4ebe29d54c7e914bc571f1883dd4cfd216f5b28bd30af5757105f",
+            "APACHE_CONFDIR": "/tmp/apache2",
+            "APACHE_RUN_DIR": "/tmp/apache2-run",
+            "APACHE_LOCK_DIR": "/tmp/apache2-lock",
+            "APACHE_PID_FILE": "/tmp/apache2-run/apache2.pid"
+          }
+        }
+      },
+      "logoUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTAgMGg0NHY0NEgweiIvPjxwYXRoIGQ9Ik0xMS4xNzIgNi4xODhoMTIuMTkzYzguNzUgMCAxMi43MTkgNi4wNzIgMTIuNzE5IDExLjMzMSAwIDUuMjYtMy45NjkgMTEuMzMyLTEyLjcyIDExLjMzMkgxOS41NHY5LjEzMmgtOC4zNjh6Ii8+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTE5LjUwNSAyMi4yOGgtMS42Nzl2LTEuNTg0aDUuMDJ2LTEuNTg0aC0xLjY4VjE3LjUxaC0xLjY2di0xLjU4NGgtMS42Nzl2LTMuMTY4aDEuNjh2LTEuNTg0aDYuNjc4djEuNTg0aDEuNjh2MS41ODRoLTUuMDJ2MS41ODRoMS42NnYxLjU4NGgxLjY4djEuNjAzaDEuNjc4djMuMTY4aC0xLjY3OXYxLjU4NGgtNi42Nzl6Ii8+PC9zdmc+",
+      "readme": "# PrestaShop\n\nOpen-source e-commerce: a complete online store with catalog, cart, checkout,\npayments, shipping, taxes and thousands of modules and themes.\n\n## What gets deployed\n\n| Service | Image | Notes |\n|---|---|---|\n| **PrestaShop** | `prestashop/prestashop:9.2.0-apache` | Public. PrestaShop 9.2.0 on PHP 8.5 + Apache. The store lives on a 5 GB volume |\n| **db** | MySQL 8 | Internal. Products, orders, customers |\n\n## After deploy\n\nThe **first boot takes a few minutes**: it downloads PrestaShop 9.2.0 (checked\nagainst its published checksum), installs it on the volume and creates your\nadmin. The service logs say `PrestaShop installed` when it's done.\n\n- **Store front**: your URL.\n- **Back office**: `https://<your-url>/<ADMIN_FOLDER>`. Sign in with the admin\n  email and password from the deploy form.\n\nThe store starts empty (no demo products). Add products, payment and shipping\nmodules from the back office.\n\n## Good to know\n\n- **Keep your URL.** PrestaShop stores its domain in the database. If you add\n  a custom domain later, also change it in **Shop Parameters → Traffic & SEO →\n  Shop domain** (and keep SSL on).\n- PrestaShop's code lives on the volume, because it edits its own files (cache,\n  modules, themes). Upgrade the store with PrestaShop's **1-Click Upgrade**\n  module, not by changing the image tag: a new image doesn't touch an existing\n  installation.\n- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FOLDER`, `SHOP_NAME`, `SHOP_COUNTRY`\n  and `SHOP_LANGUAGE` are only used by the first install.\n- Configure email under **Advanced Parameters → E-mail** (SMTP) so order\n  confirmations reach your customers.\n"
     },
     {
       "slug": "umami",
