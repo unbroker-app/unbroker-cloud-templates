@@ -29,4 +29,5 @@ database**. A sample database is included to play with.
   later in Metabase under **Account settings**.
 - `MB_ENCRYPTION_SECRET_KEY` is generated at deploy and encrypts the
   credentials of the databases you connect. Don't change it.
-- Metabase is a Java app and wants about **1 GB of memory** or more.
+- Metabase is a Java app: the service starts with **1.5 GB of memory and 1
+  CPU**. Raise it in the service settings for large datasets or many users.

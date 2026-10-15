@@ -3,6 +3,9 @@
 // applies, so "works here" means "works there":
 //   • every app container runs as uid/gid 10001 (datastore presets as 999),
 //     with all capabilities dropped and no-new-privileges;
+//   • under the service's memory/CPU limits: its `resources`, else the
+//     platform default (256 MiB / 250m for apps, the preset's own for
+//     datastores), and 180 s to become healthy;
 //   • HOME=/tmp, /tmp is a small tmpfs, PORT (and HOST=0.0.0.0 for apps) are
 //     injected; the image's own filesystem is NOT writable by that user —
 //     only the declared volume is;
@@ -89,7 +92,13 @@ for (const [name, svc] of Object.entries(template.services)) {
   const env = Object.fromEntries(Object.entries(svc.env).map(([k, v]) => [k, fill(v)]));
   if ("preset" in svc) {
     const p = PRESETS[svc.preset](secret(24));
-    specs[name] = { ...p, uid: 999, public: false, env: { ...p.env, ...env } };
+    specs[name] = {
+      ...p,
+      ...svc.resources,
+      uid: 999,
+      public: false,
+      env: { ...p.env, ...env },
+    };
   } else {
     specs[name] = {
       image: svc.image,
@@ -98,6 +107,8 @@ for (const [name, svc] of Object.entries(template.services)) {
       startCommand: svc.startCommand,
       healthcheck: svc.healthcheck,
       uid: 10001,
+      memoryMiB: svc.resources?.memoryMiB ?? 256,
+      cpuMillicores: svc.resources?.cpuMillicores ?? 250,
       public: svc.public,
       env,
     };
@@ -131,6 +142,7 @@ for (const name of order) {
   // database is ready recovers the same way it would in the cluster.
   const args = ["run", "-d", "--name", id, "--network", net, "--restart", "on-failure:10"];
   args.push("--user", `${s.uid}:${s.uid}`, "--cap-drop", "ALL", "--security-opt", "no-new-privileges");
+  args.push("--memory", `${s.memoryMiB}m`, "--memory-swap", `${s.memoryMiB}m`, "--cpus", String(s.cpuMillicores / 1000));
   args.push("--tmpfs", `/tmp:size=256m,uid=${s.uid},gid=${s.uid},mode=1777`);
   if (s.volumePath) {
     const vol = `${id}-data`;
@@ -182,7 +194,8 @@ let ok = true;
 for (const name of order.filter((n) => specs[n].public)) {
   const s = specs[name];
   const url = `http://localhost:${s.hostPort}${s.healthcheck ?? "/"}`;
-  const deadline = Date.now() + 240_000;
+  // The platform gives a rollout 180 s (ROLLOUT_TIMEOUT_MS).
+  const deadline = Date.now() + 180_000;
   let status = 0;
   process.stdout.write(`… waiting for ${name} at ${url} `);
   while (Date.now() < deadline) {
@@ -199,6 +212,9 @@ for (const name of order.filter((n) => specs[n].public)) {
   else {
     ok = false;
     console.log(` ✗ (${status || "no answer"})`);
+    for (const n of order)
+      if (docker(["inspect", "-f", "{{.State.OOMKilled}}", cname(n)], { check: false }) === "true")
+        console.log(`  ${n} was OOM-killed: it needs more than its ${specs[n].memoryMiB} MiB memory limit`);
     const logs = spawnSync("docker", ["logs", "--tail", "60", cname(name)], { encoding: "utf8" });
     console.log(logs.stdout + logs.stderr);
   }

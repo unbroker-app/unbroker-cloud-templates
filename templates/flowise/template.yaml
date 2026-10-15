@@ -21,6 +21,11 @@ services:
     port: 3000
     public: true
     healthcheck: /api/v1/ping
+    # Flowise loads its node library (LangChain and friends) at boot; under the
+    # 256 MiB default it never answers.
+    resources:
+      memoryMiB: 1024
+      cpuMillicores: 500
     # Uploaded documents, the encryption key file and logs.
     volume:
       path: /data

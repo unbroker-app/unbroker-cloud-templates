@@ -76,7 +76,7 @@ const step = async (title, fn) => {
 async function waitHealthy() {
   for (const [name, s] of Object.entries(state.services).filter(([, s]) => s.public)) {
     const url = `${s.url}${s.healthcheck ?? "/"}`;
-    const deadline = Date.now() + 240_000;
+    const deadline = Date.now() + 180_000; // the platform's rollout timeout
     let status = 0;
     while (Date.now() < deadline) {
       status = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5000) })

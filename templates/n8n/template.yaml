@@ -27,6 +27,11 @@ services:
     port: 5678
     public: true
     healthcheck: /healthz
+    # Under the 256 MiB default n8n crash-loops ("Last session crashed") before
+    # it ever answers.
+    resources:
+      memoryMiB: 1024
+      cpuMillicores: 500
     # Credentials files, the instance id and community nodes. Workflows and
     # executions live in Postgres.
     volume:

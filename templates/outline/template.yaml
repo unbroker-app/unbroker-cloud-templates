@@ -52,18 +52,27 @@ services:
     port: 3000
     public: true
     healthcheck: /_health
+    # Web, collaboration and workers run in one Node process; it doesn't become
+    # healthy under the 256 MiB default. A full CPU so the first boot (migrations
+    # and workspace on the internal port, then the public server) fits the 180 s
+    # rollout window.
+    resources:
+      memoryMiB: 1024
+      cpuMillicores: 1000
     # Uploaded images and attachments. Documents live in Postgres.
     volume:
       path: /var/lib/outline/data
       sizeGb: 5
     # Outline wants SECRET_KEY as 64 hex characters; it is derived from a
-    # generated secret. A fresh Outline also lets whoever opens it first create
-    # the workspace, so once it is up a one-off script creates it with
-    # WORKSPACE_NAME and ADMIN_EMAIL, and stops the container if Outline
-    # rejects them. With a workspace in place it does nothing.
+    # generated secret. A fresh Outline also lets whoever reaches it first create
+    # the workspace (installation.create), so while the database has no team,
+    # boot first runs Outline on an internal port (3999, which the platform never
+    # routes to), creates the workspace there with WORKSPACE_NAME and
+    # ADMIN_EMAIL, stops it, and only then starts the real server on the public
+    # port. If Outline rejects the values, boot stops before that port opens.
     startCommand: >-
-      export SECRET_KEY=$(printf %s "$SECRET_SEED" | sha256sum | cut -c1-64);
-      node -e 'const u="http://127.0.0.1:"+process.env.PORT,e=process.env;(async()=>{for(;;){try{if((await fetch(u+"/_health")).ok)break}catch{}await new Promise(s=>setTimeout(s,2000))}const r=await fetch(u+"/api/installation.create",{method:"POST",redirect:"manual",headers:{"content-type":"application/json"},body:JSON.stringify({teamName:e.WORKSPACE_NAME,userName:e.ADMIN_NAME,userEmail:e.ADMIN_EMAIL})}),t=await r.text();if(r.status<400)console.log("Outline workspace created for "+e.ADMIN_EMAIL);else if(!t.includes("existing teams")){console.log("Outline setup failed ("+r.status+"): "+t);process.kill(1)}})()' &
+      export SECRET_KEY=$(printf %s "$SECRET_SEED" | sha256sum | cut -c1-64) &&
+      node -e 'const {spawn}=require("child_process"),e=process.env,u="http://127.0.0.1:3999",sleep=t=>new Promise(r=>setTimeout(r,t));(async()=>{let n=0;try{const c=new (require("pg").Client)({connectionString:e.DATABASE_URL});await c.connect();n=+(await c.query("select count(*) from teams")).rows[0].count;await c.end()}catch{}if(n>0)return;console.log("Creating the Outline workspace before opening the public port...");const p=spawn("node",["build/server/index.js"],{env:{...e,PORT:"3999"},stdio:"inherit",detached:true});let gone=false;p.on("exit",()=>gone=true);for(;;){if(gone){console.log("Outline exited before it was ready");process.exit(1)}try{if((await fetch(u+"/_health")).ok)break}catch{}await sleep(1000)}const r=await fetch(u+"/api/installation.create",{method:"POST",redirect:"manual",headers:{"content-type":"application/json"},body:JSON.stringify({teamName:e.WORKSPACE_NAME,userName:e.ADMIN_NAME,userEmail:e.ADMIN_EMAIL})}),t=await r.text();process.kill(-p.pid,"SIGTERM");for(let i=0;i<30&&!gone;i++)await sleep(1000);try{process.kill(-p.pid,"SIGKILL")}catch{}if(r.status>=400&&!t.includes("existing teams")){console.log("Outline setup failed ("+r.status+"): "+t);process.exit(1)}console.log("Outline workspace created for "+e.ADMIN_EMAIL)})()' &&
       exec node build/server/index.js
     env:
       URL: ${{services.outline.url}}

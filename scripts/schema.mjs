@@ -48,12 +48,23 @@ const image = z
   )
   .refine((v) => !/:latest$/.test(v), "pin a version instead of :latest");
 const sizeGb = z.number().int().min(1).max(50);
+// What a service needs when the platform default for its profile (256 MiB /
+// 250m for an app, 384 MiB for a database preset) isn't enough. Same bounds as
+// a service's own limits on Unbroker Cloud.
+const resources = z
+  .object({
+    memoryMiB: z.number().int().min(128).max(2048).optional(),
+    cpuMillicores: z.number().int().min(100).max(2000).optional(),
+  })
+  .strict()
+  .optional();
 
 const presetService = z
   .object({
     preset: z.enum(PRESETS),
     name: serviceName.optional(),
     volumeSizeGb: sizeGb.default(1),
+    resources,
     env: env.default({}),
   })
   .strict();
@@ -72,6 +83,7 @@ const imageService = z
       .optional(),
     healthcheck: httpPath.optional(),
     volume: z.object({ path: absPath, sizeGb: sizeGb.default(1) }).strict().optional(),
+    resources,
     env: env.default({}),
   })
   .strict();

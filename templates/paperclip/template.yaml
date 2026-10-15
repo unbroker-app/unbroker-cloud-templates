@@ -21,6 +21,11 @@ services:
     port: 3100
     public: true
     healthcheck: /api/health
+    # The server plus the agents it runs, in this container. 2 GB is the
+    # platform's per-service maximum; upstream recommends 4 GB for several agents.
+    resources:
+      memoryMiB: 2048
+      cpuMillicores: 1000
     # Instance data: agent workspaces, uploads, backups, and the CLI agents'
     # sign-ins. Companies, agents and tickets live in Postgres.
     volume:

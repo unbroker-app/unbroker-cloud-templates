@@ -58,6 +58,9 @@ services:
       path: /data
       sizeGb: 1
     startCommand: ...         # optional, runs through /bin/sh -c
+    resources:                # optional, when the defaults below aren't enough
+      memoryMiB: 512          # 128..2048 (default 256; 384 for a preset)
+      cpuMillicores: 500      # 100..2000 (default 250)
     env:
       DATABASE_URL: postgres://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/miniflux?sslmode=disable
       ADMIN_PASSWORD: ${{vars.ADMIN_PASSWORD}}
@@ -108,6 +111,12 @@ problems come from this:
   on all interfaces, above 1024.
 - **Variable names are `UPPER_SNAKE_CASE`.** If an app reads lowercase
   config, map it in `startCommand` (see [`ghost`](templates/ghost/template.yaml)).
+- **Memory and CPU are capped** by default: 256 MiB and 0.25 CPU for an app,
+  384 MiB for a database preset, 128 MiB for Redis. A service that goes over
+  its memory is OOM-killed, and a rollout must become healthy within 180 s.
+  A service that needs more declares `resources` (presets too); the deployed
+  service starts with those limits. Ask for what the app really needs: it is
+  what the user pays for.
 - **Containers restart on failure**, and datastores deploy before the apps
   that reference them, so an app may briefly start before its database
   accepts connections.
@@ -124,8 +133,9 @@ problems come from this:
    npm run try -- <slug> --set KEY=value     # needs Docker
    npm run try -- <slug> --down
    ```
-   `try` drops privileges, pins `HOME`, mounts the volume like a cluster disk,
-   resolves every token, and waits for each public service's healthcheck.
+   `try` drops privileges, pins `HOME`, applies the default memory and CPU
+   limits, mounts the volume like a cluster disk, resolves every token, and
+   waits up to 180 s for each public service's healthcheck.
 4. Make sure it works past the healthcheck: sign in, create something, restart
    the container, and confirm the data is still there. Write that down as
    `scripts/e2e/<slug>.mjs` (see [`miniflux`](scripts/e2e/miniflux.mjs)) so CI
