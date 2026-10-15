@@ -35,8 +35,8 @@ admin, nothing is printed.
 - **Agents need model credentials.** Add your Anthropic, OpenAI or other API
   keys in Paperclip. They are encrypted with a key generated at deploy.
   Sign-ins made by the bundled CLIs are kept on the volume.
-- Agents run **inside this container**, with its CPU and memory. Give the
-  service at least 2 vCPU and 4 GB of memory, more if you run several agents
-  at once.
+- Agents run **inside this container**, with its CPU and memory. The service
+  starts with **2 GB and 1 CPU** (2 GB is the most memory a service can have). That is
+  enough for a few agents at a time; upstream recommends 4 GB for more.
 - Anyone who finds the URL can create an account, but an account sees nothing
   until an admin invites it to a company.
