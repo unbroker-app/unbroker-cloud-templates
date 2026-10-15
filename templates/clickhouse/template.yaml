@@ -1,0 +1,38 @@
+name: ClickHouse
+tagline: Fast open-source column database for real-time analytics
+category: database
+tags: [olap, analytics, sql, columnar]
+maintainer: Unbroker
+official: true
+links:
+  website: https://clickhouse.com
+  source: https://github.com/ClickHouse/ClickHouse
+  docs: https://clickhouse.com/docs
+
+variables:
+  CLICKHOUSE_PASSWORD:
+    description: Password for the "default" user. Every query over the public URL needs it, so make it long.
+
+services:
+  clickhouse:
+    name: ClickHouse
+    image: clickhouse/clickhouse-server:26.8.27.9
+    port: 8123
+    public: true
+    healthcheck: /ping
+    volume:
+      path: /var/lib/clickhouse
+      sizeGb: 10
+    # The image's entrypoint writes the user config into /etc and switches
+    # users, neither of which works unprivileged. Instead, copy the stock config
+    # to /tmp, add two overrides (logs to the console, since /var/log isn't
+    # writable; the "default" user takes its password from CLICKHOUSE_PASSWORD
+    # and may manage users), and start the server on it. Data stays in the
+    # stock /var/lib/clickhouse, which is the volume.
+    startCommand: >-
+      rm -rf /tmp/ch && cp -r /etc/clickhouse-server /tmp/ch && mkdir -p /tmp/ch/config.d /tmp/ch/users.d &&
+      printf '%s' '<clickhouse><logger><log remove="remove"/><errorlog remove="remove"/><console>1</console></logger></clickhouse>' > /tmp/ch/config.d/zz-unbroker.xml &&
+      printf '%s' '<clickhouse><users><default><password from_env="CLICKHOUSE_PASSWORD"/><access_management>1</access_management><named_collection_control>1</named_collection_control><show_named_collections>1</show_named_collections><show_named_collections_secrets>1</show_named_collections_secrets></default></users></clickhouse>' > /tmp/ch/users.d/zz-unbroker.xml &&
+      exec clickhouse-server --config-file=/tmp/ch/config.xml
+    env:
+      CLICKHOUSE_PASSWORD: ${{vars.CLICKHOUSE_PASSWORD}}
