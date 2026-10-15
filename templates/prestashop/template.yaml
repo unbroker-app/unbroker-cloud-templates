@@ -15,16 +15,26 @@ variables:
     default: My Store
   ADMIN_EMAIL:
     description: Email of the back-office admin. You sign in with it.
+    pattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    patternMessage: 'must be an email address, like you@example.com'
   ADMIN_PASSWORD:
     description: Password for that admin (at least 8 characters).
+    minLength: 8
+    maxLength: 72
   ADMIN_FOLDER:
     description: Secret folder name for the back office, e.g. admin-k3x9q (letters, digits and dashes). Your back office will live at /<this folder>, so don't use "admin".
+    pattern: '^(?!admin$)[A-Za-z0-9_-]+$'
+    patternMessage: 'must be letters, digits, dashes or underscores, and not "admin"'
   SHOP_COUNTRY:
     description: Two-letter code of your store's country (sets currency, taxes and address formats), e.g. us, es, fr, ar.
     default: us
+    pattern: '^[a-z]{2}$'
+    patternMessage: 'must be a two-letter lowercase country code, like us or ar'
   SHOP_LANGUAGE:
     description: Two-letter code of the store's language, e.g. en, es, fr.
     default: en
+    pattern: '^[a-z]{2}$'
+    patternMessage: 'must be a two-letter lowercase language code, like en or es'
 
 services:
   db:
