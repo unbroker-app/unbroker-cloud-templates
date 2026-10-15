@@ -12,6 +12,7 @@ links:
 variables:
   ADMIN_PASSWORD:
     description: Password for the admin account (at least 8 characters). It replaces Umami's default password on first boot.
+    minLength: 8
 
 services:
   db:

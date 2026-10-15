@@ -15,6 +15,7 @@ variables:
     default: admin
   ADMIN_PASSWORD:
     description: Password for that account (at least 6 characters). It is all that stands between the public URL and your feeds, so pick a strong one.
+    minLength: 6
 
 services:
   db:

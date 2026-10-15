@@ -23,9 +23,14 @@ import { createServer } from "node:net";
 import { join } from "node:path";
 import { parse } from "yaml";
 import { PRESETS } from "./presets.mjs";
-import { SECRET_TOKEN_RE, SERVICE_TOKEN_RE, VAR_TOKEN_RE, templateSchema } from "./schema.mjs";
+import { SECRET_TOKEN_RE, SERVICE_TOKEN_RE, VAR_TOKEN_RE, templateSchema, variableProblem } from "./schema.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
+// fetch's AbortSignal.timeout timer is unref'd: if a healthcheck request is
+// the only thing pending, Node can exit mid-await ("unsettled top-level
+// await") and fail a healthy template. Hold the event loop open until the
+// script exits on its own (it always ends with process.exit).
+setInterval(() => {}, 60_000);
 const [slug, ...rest] = process.argv.slice(2);
 if (!slug) {
   console.error("usage: npm run try -- <slug> [--set KEY=value ...] [--down]");
@@ -70,6 +75,12 @@ for (const [key, spec] of Object.entries(template.variables)) {
   vars[key] = answers[key] ?? spec.default ?? "";
   if (!vars[key] && spec.required) {
     console.error(`missing --set ${key}=…  (${spec.description})`);
+    process.exit(2);
+  }
+  // The deploy form refuses these the same way.
+  const problem = variableProblem(spec, vars[key]);
+  if (problem) {
+    console.error(`--set ${key}: ${key} ${problem}`);
     process.exit(2);
   }
 }

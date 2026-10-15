@@ -14,6 +14,8 @@ links:
 variables:
   ADMIN_EMAIL:
     description: Email of the first admin. You sign in with a link sent to this address.
+    pattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    patternMessage: 'must be an email address, like you@example.com'
   ADMIN_NAME:
     description: Name shown for that admin.
     default: Admin
@@ -25,9 +27,13 @@ variables:
   SMTP_PORT:
     description: SMTP port. 587 (STARTTLS) or 465 (TLS).
     default: "587"
+    pattern: '^[0-9]{1,5}$'
+    patternMessage: 'must be a port number, like 587'
   SMTP_SECURE:
     description: '"true" for port 465 (TLS from the start), "false" for 587 (STARTTLS).'
     default: "false"
+    pattern: '^(true|false)$'
+    patternMessage: 'must be true or false'
   SMTP_USERNAME:
     description: SMTP username. Leave empty if the server needs no authentication.
     required: false
@@ -36,6 +42,8 @@ variables:
     required: false
   SMTP_FROM_EMAIL:
     description: Sender of the sign-in emails, e.g. Outline <wiki@yourdomain.com>. The domain must be verified with your provider.
+    pattern: '^([^<>]*<[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+>|[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+)$'
+    patternMessage: 'must be an email address, optionally with a name: Outline <wiki@yourdomain.com>'
 
 services:
   db:

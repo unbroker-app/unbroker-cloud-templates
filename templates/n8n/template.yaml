@@ -14,6 +14,8 @@ variables:
     description: Timezone schedule triggers run in, e.g. America/Argentina/Buenos_Aires.
     required: false
     default: UTC
+    pattern: '^(UTC|[A-Za-z]+(/[A-Za-z0-9_+-]+)+)$'
+    patternMessage: 'must be a timezone name, like UTC or America/Argentina/Buenos_Aires'
 
 services:
   db:

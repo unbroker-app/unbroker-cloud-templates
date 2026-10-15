@@ -14,6 +14,8 @@ variables:
     description: Let anyone with the link create an account. Create yours, then set this to false on the service and redeploy.
     required: false
     default: "true"
+    pattern: '^(true|false)$'
+    patternMessage: 'must be true or false'
   ADMIN_TOKEN:
     description: Password for the /admin panel (use a long random one). Saved write-only on the service, so keep a copy. Delete the variable later to turn the panel off.
     required: true
