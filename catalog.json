@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "commit": "56e7e6e36813ee3f3f38ff8aa9758ddfbe835b04",
-  "generatedAt": "2026-10-15T03:22:04.919Z",
+  "commit": "dcd2a17314237278583b812a4afcde6a01667e78",
+  "generatedAt": "2026-10-15T15:32:01.069Z",
   "templates": [
     {
       "slug": "clickhouse",
@@ -68,7 +68,9 @@
       "variables": {
         "ADMIN_EMAIL": {
           "description": "Email of the first admin user — you sign in with it.",
-          "required": true
+          "required": true,
+          "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+          "patternMessage": "must be an email address, like you@example.com"
         },
         "ADMIN_PASSWORD": {
           "description": "Password for that admin user.",
@@ -290,11 +292,14 @@
       "variables": {
         "ADMIN_EMAIL": {
           "description": "Email of the first admin account. You sign in with it.",
-          "required": true
+          "required": true,
+          "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+          "patternMessage": "must be an email address, like you@example.com"
         },
         "ADMIN_PASSWORD": {
           "description": "Password for that account. Metabase requires at least 15 characters and rejects common passwords.",
-          "required": true
+          "required": true,
+          "minLength": 15
         }
       },
       "services": {
@@ -367,7 +372,8 @@
         },
         "ADMIN_PASSWORD": {
           "description": "Password for that account (at least 6 characters). It is all that stands between the public URL and your feeds, so pick a strong one.",
-          "required": true
+          "required": true,
+          "minLength": 6
         }
       },
       "services": {
@@ -419,7 +425,9 @@
         "TIMEZONE": {
           "description": "Timezone schedule triggers run in, e.g. America/Argentina/Buenos_Aires.",
           "required": false,
-          "default": "UTC"
+          "default": "UTC",
+          "pattern": "^(UTC|[A-Za-z]+(/[A-Za-z0-9_+-]+)+)$",
+          "patternMessage": "must be a timezone name, like UTC or America/Argentina/Buenos_Aires"
         }
       },
       "services": {
@@ -488,7 +496,9 @@
       "variables": {
         "ADMIN_EMAIL": {
           "description": "Email of the first admin. You sign in with a link sent to this address.",
-          "required": true
+          "required": true,
+          "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+          "patternMessage": "must be an email address, like you@example.com"
         },
         "ADMIN_NAME": {
           "description": "Name shown for that admin.",
@@ -507,12 +517,16 @@
         "SMTP_PORT": {
           "description": "SMTP port. 587 (STARTTLS) or 465 (TLS).",
           "required": true,
-          "default": "587"
+          "default": "587",
+          "pattern": "^[0-9]{1,5}$",
+          "patternMessage": "must be a port number, like 587"
         },
         "SMTP_SECURE": {
           "description": "\"true\" for port 465 (TLS from the start), \"false\" for 587 (STARTTLS).",
           "required": true,
-          "default": "false"
+          "default": "false",
+          "pattern": "^(true|false)$",
+          "patternMessage": "must be true or false"
         },
         "SMTP_USERNAME": {
           "description": "SMTP username. Leave empty if the server needs no authentication.",
@@ -524,7 +538,9 @@
         },
         "SMTP_FROM_EMAIL": {
           "description": "Sender of the sign-in emails, e.g. Outline <wiki@yourdomain.com>. The domain must be verified with your provider.",
-          "required": true
+          "required": true,
+          "pattern": "^([^<>]*<[^@\\s<>]+@[^@\\s<>]+\\.[^@\\s<>]+>|[^@\\s<>]+@[^@\\s<>]+\\.[^@\\s<>]+)$",
+          "patternMessage": "must be an email address, optionally with a name: Outline <wiki@yourdomain.com>"
         }
       },
       "services": {
@@ -667,7 +683,8 @@
       "variables": {
         "ADMIN_PASSWORD": {
           "description": "Password for the admin account (at least 8 characters). It replaces Umami's default password on first boot.",
-          "required": true
+          "required": true,
+          "minLength": 8
         }
       },
       "services": {
@@ -760,7 +777,9 @@
         "SIGNUPS_ALLOWED": {
           "description": "Let anyone with the link create an account. Create yours, then set this to false on the service and redeploy.",
           "required": false,
-          "default": "true"
+          "default": "true",
+          "pattern": "^(true|false)$",
+          "patternMessage": "must be true or false"
         },
         "ADMIN_TOKEN": {
           "description": "Password for the /admin panel (use a long random one). Saved write-only on the service, so keep a copy. Delete the variable later to turn the panel off.",
