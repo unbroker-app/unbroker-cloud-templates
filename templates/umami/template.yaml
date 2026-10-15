@@ -30,13 +30,14 @@ services:
     resources:
       memoryMiB: 512
       cpuMillicores: 500
-    # Umami seeds an admin/umami account and has no setting to change it. Once
-    # the server answers, a one-off script signs in with that default and sets
-    # ADMIN_PASSWORD through Umami's own API. If the default no longer works
-    # (already changed), it does nothing.
+    # Umami seeds an admin/umami account and has no setting to change it. While
+    # the admin still has that default password, boot first runs Umami on an
+    # internal address (127.0.0.1:3999, never routed), sets ADMIN_PASSWORD
+    # through Umami's own API there, stops it, and only then starts the public
+    # server. If Umami rejects the password, boot stops before that port opens.
     startCommand: >-
       export PATH="$PWD/node_modules/.bin:$PATH" && node scripts/check-db.js &&
-      { node -e 'const u="http://127.0.0.1:"+process.env.PORT,post=(p,b,t)=>fetch(u+p,{method:"POST",headers:Object.assign({"content-type":"application/json"},t?{authorization:"Bearer "+t}:{}),body:JSON.stringify(b)});(async()=>{for(let i=0;i<180;i++){try{const r=await post("/api/auth/login",{username:"admin",password:"umami"});if(r.status===401)return;if(r.ok){const{token}=await r.json(),c=await post("/api/me/password",{currentPassword:"umami",newPassword:process.env.ADMIN_PASSWORD},token);console.log(c.ok?"admin password set":"could not set the admin password: "+c.status+" "+await c.text());return}}catch{}await new Promise(s=>setTimeout(s,1000))}})()' & } &&
+      node -e 'const e=process.env,{spawn}=require("child_process"),sleep=t=>new Promise(r=>setTimeout(r,t)),u="http://127.0.0.1:3999",post=(p,b,t)=>fetch(u+p,{method:"POST",headers:Object.assign({"content-type":"application/json"},t?{authorization:"Bearer "+t}:{}),body:JSON.stringify(b)});(async()=>{const pg=require("module").createRequire(require.resolve("@prisma/adapter-pg"))("pg"),c=new pg.Client({connectionString:e.DATABASE_URL});await c.connect();const {rows}=await c.query("select password from \"user\" where username=$1",["admin"]);await c.end();if(!rows.length||rows[0].password!=="$2b$10$BUli0c.muyCW1ErNJc3jL.vFRFtFJWrT8/GcR4A.sUdCznaXiqFXa")return;console.log("Replacing the default admin password before opening the public port...");const p=spawn("node",["server.js"],{env:{...e,PORT:"3999",HOSTNAME:"127.0.0.1"},stdio:"inherit",detached:true});let gone=false;p.on("exit",()=>gone=true);for(;;){if(gone){console.log("Umami exited before it was ready");process.exit(1)}try{if((await fetch(u+"/api/heartbeat")).ok)break}catch{}await sleep(500)}const r=await post("/api/auth/login",{username:"admin",password:"umami"}),tok=r.ok?(await r.json()).token:null,ch=tok?await post("/api/me/password",{currentPassword:"umami",newPassword:e.ADMIN_PASSWORD},tok):r;const ok=ch.ok,why=ok?"":ch.status+" "+await ch.text();process.kill(-p.pid,"SIGTERM");for(let i=0;i<20&&!gone;i++)await sleep(500);if(!ok){console.log("Could not set the admin password: "+why);process.exit(1)}console.log("Admin password set from ADMIN_PASSWORD")})()' &&
       exec node server.js
     env:
       DATABASE_URL: postgresql://postgres:${{services.db.env.POSTGRES_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/umami

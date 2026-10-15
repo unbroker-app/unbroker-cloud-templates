@@ -14,7 +14,8 @@ events, funnels and goals, with no cookies and nothing sent to third parties.
 
 Sign in with username **`admin`** and the **password you entered in the deploy
 form**. Umami ships with `admin` / `umami`; the template replaces that password
-as soon as the server is up, so the default never works on your instance.
+on first boot, before your URL starts answering, so the default never works on
+your instance.
 
 Then add a website under **Settings → Websites → Add website** and paste its
 tracking code into your site's `<head>`:
