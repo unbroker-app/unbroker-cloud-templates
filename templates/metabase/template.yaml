@@ -27,6 +27,12 @@ services:
     port: 3000
     public: true
     healthcheck: /api/health
+    # A JVM: under the 256 MiB default its heap is ~120 MB and it crash-loops.
+    # With 1.5 GB and the heap at 70% of it, Metabase boots in time and has room
+    # to run queries.
+    resources:
+      memoryMiB: 1536
+      cpuMillicores: 1000
     # Database drivers Metabase unpacks on boot, and the native libraries they
     # load (/tmp is noexec). Questions, dashboards and users live in Postgres.
     volume:
@@ -62,7 +68,7 @@ services:
       MB_PLUGINS_DIR: /data/plugins
       # The SQLite driver (the sample database) unpacks a native library before
       # loading it; /tmp is mounted noexec.
-      JAVA_OPTS: -Dorg.sqlite.tmpdir=/data/native
+      JAVA_OPTS: -Dorg.sqlite.tmpdir=/data/native -XX:MaxRAMPercentage=70
       MB_JETTY_PORT: "3000"
       MB_ANON_TRACKING_ENABLED: "false"
       MB_CHECK_FOR_UPDATES: "false"
