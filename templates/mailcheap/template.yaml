@@ -1,0 +1,111 @@
+name: MailCheap
+tagline: Newsletters where you pay for the emails you send, not for dormant subscribers
+category: productivity
+tags: [newsletter, email, marketing, mcp]
+maintainer: Unbroker
+official: true
+links:
+  website: https://mailcheap.ai
+  source: https://github.com/marclou/mailcheap
+  docs: https://github.com/marclou/mailcheap#self-hosting
+
+# MailCheap signs people in with a code sent by email, so it needs a way to send
+# that email from the start: Resend, or Amazon SES. Reader emails need SES and
+# Upstash QStash (background sending) on top, and stay off until SENDING_ENABLED
+# is "true".
+variables:
+  ADMIN_EMAIL:
+    description: Your email. You sign in to MailCheap with a code sent here, and it can open /admin.
+    pattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    patternMessage: 'must be an email address, like you@example.com'
+  ALLOWED_EMAILS:
+    description: Who else can sign in, comma-separated addresses and whole domains, e.g. jane@example.com, @example.org.
+    required: false
+  EMAIL_FROM:
+    description: From address of sign-in codes and alerts, e.g. MailCheap <login@mail.example.com>. Its domain must be verified at Resend or Amazon SES.
+    pattern: '^([^<>]*<[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+>|[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+)$'
+    patternMessage: 'must be an email address, optionally with a name: MailCheap <login@example.com>'
+  RESEND_API_KEY:
+    description: Resend API key for sign-in codes and alerts. Without it, they go through Amazon SES.
+    required: false
+  SES_REGION:
+    description: AWS region of your Amazon SES account.
+    default: us-east-1
+    pattern: '^[a-z]{2}(-[a-z]+)+-[0-9]$'
+    patternMessage: 'must be an AWS region, like us-east-1'
+  SES_ACCESS_KEY_ID:
+    description: Access key of the IAM user MailCheap sends through Amazon SES with.
+    required: false
+  SES_SECRET_ACCESS_KEY:
+    description: Secret of that access key.
+    required: false
+  SES_AWS_ACCOUNT_ID:
+    description: The 12-digit ID of that AWS account.
+    required: false
+    pattern: '^[0-9]{12}$'
+    patternMessage: 'must be the 12-digit AWS account ID'
+  SES_SNS_TOPIC_ARN:
+    description: ARN of the SNS topic that receives bounces, complaints and deliveries, subscribed to https://<your-app>/api/webhooks/ses.
+    required: false
+    pattern: '^arn:aws[a-z-]*:sns:[a-z0-9-]+:[0-9]{12}:[A-Za-z0-9_-]+$'
+    patternMessage: 'must be an SNS topic ARN, like arn:aws:sns:us-east-1:123456789012:mailcheap-ses-events'
+  QSTASH_TOKEN:
+    description: Upstash QStash token. QStash runs background sending and scheduling.
+    required: false
+  QSTASH_CURRENT_SIGNING_KEY:
+    description: QStash current signing key.
+    required: false
+  QSTASH_NEXT_SIGNING_KEY:
+    description: QStash next signing key.
+    required: false
+  SENDING_ENABLED:
+    description: '"true" lets emails reach readers. Leave "false" until your domain and email provider are set up.'
+    default: "false"
+    pattern: '^(true|false)$'
+    patternMessage: 'must be true or false'
+
+services:
+  db:
+    preset: mongodb
+    # MongoDB sizes its WiredTiger cache at 256 MB under any limit below 1.5 GB.
+    # With 100k contacts mongod held ~345 MiB, too close to the 384 MiB default.
+    resources:
+      memoryMiB: 448
+
+  mailcheap:
+    name: MailCheap
+    # Upstream publishes no image; this one builds a pinned upstream commit
+    # (https://github.com/unbroker-app/mailcheap-container).
+    image: ghcr.io/unbroker-app/mailcheap-container:sha-6225f69e3c98b42745fab34d827f7b5ed4d3c63c
+    port: 3000
+    public: true
+    # 503, with the reason, while a secret is missing or too short.
+    healthcheck: /api/health
+    # Measured with 100k contacts, 10 campaigns and 20 parallel page loads: a
+    # ~195 MiB peak. 256 MiB fits with little room, and 250m makes every page
+    # 2-3x slower.
+    resources:
+      memoryMiB: 320
+      cpuMillicores: 350
+    env:
+      MONGODB_URI: mongodb://root:${{services.db.env.MONGO_INITDB_ROOT_PASSWORD}}@${{services.db.host}}:${{services.db.port}}/mailcheap?authSource=admin
+      APP_URL: ${{services.mailcheap.url}}
+      # Signs sessions and every link in sent emails. Rotating it signs everyone
+      # out and breaks links in emails already sent.
+      BETTER_AUTH_SECRET: ${{secret(64)}}
+      # Keys the never-email list. Its own secret; changing it empties the list.
+      SUPPRESSION_HASH_KEY: ${{secret(64)}}
+      ADMIN_EMAILS: ${{vars.ADMIN_EMAIL}}
+      ALLOWED_EMAILS: ${{vars.ALLOWED_EMAILS}}
+      EMAIL_FROM: ${{vars.EMAIL_FROM}}
+      RESEND_API_KEY: ${{vars.RESEND_API_KEY}}
+      EMAIL_PROVIDER: ses
+      SES_REGION: ${{vars.SES_REGION}}
+      SES_ACCESS_KEY_ID: ${{vars.SES_ACCESS_KEY_ID}}
+      SES_SECRET_ACCESS_KEY: ${{vars.SES_SECRET_ACCESS_KEY}}
+      SES_AWS_ACCOUNT_ID: ${{vars.SES_AWS_ACCOUNT_ID}}
+      SES_SNS_TOPIC_ARN: ${{vars.SES_SNS_TOPIC_ARN}}
+      QSTASH_TOKEN: ${{vars.QSTASH_TOKEN}}
+      QSTASH_CURRENT_SIGNING_KEY: ${{vars.QSTASH_CURRENT_SIGNING_KEY}}
+      QSTASH_NEXT_SIGNING_KEY: ${{vars.QSTASH_NEXT_SIGNING_KEY}}
+      SENDING_ENABLED: ${{vars.SENDING_ENABLED}}
