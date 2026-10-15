@@ -25,6 +25,11 @@ services:
     port: 3000
     public: true
     healthcheck: /api/heartbeat
+    # Next.js plus a Prisma migration at boot; under the 256 MiB default it
+    # restarts mid-run.
+    resources:
+      memoryMiB: 512
+      cpuMillicores: 500
     # Umami seeds an admin/umami account and has no setting to change it. Once
     # the server answers, a one-off script signs in with that default and sets
     # ADMIN_PASSWORD through Umami's own API. If the default no longer works
