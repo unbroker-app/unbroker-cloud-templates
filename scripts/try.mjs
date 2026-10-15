@@ -3,8 +3,9 @@
 // applies, so "works here" means "works there":
 //   • every app container runs as uid/gid 10001 (datastore presets as 999),
 //     with all capabilities dropped and no-new-privileges;
-//   • under the platform's default limits: 256 MiB / 250m CPU for apps, the
-//     preset's own for datastores, and 180 s to become healthy;
+//   • under the service's memory/CPU limits: its `resources`, else the
+//     platform default (256 MiB / 250m for apps, the preset's own for
+//     datastores), and 180 s to become healthy;
 //   • HOME=/tmp, /tmp is a small tmpfs, PORT (and HOST=0.0.0.0 for apps) are
 //     injected; the image's own filesystem is NOT writable by that user —
 //     only the declared volume is;
@@ -91,7 +92,13 @@ for (const [name, svc] of Object.entries(template.services)) {
   const env = Object.fromEntries(Object.entries(svc.env).map(([k, v]) => [k, fill(v)]));
   if ("preset" in svc) {
     const p = PRESETS[svc.preset](secret(24));
-    specs[name] = { ...p, uid: 999, public: false, env: { ...p.env, ...env } };
+    specs[name] = {
+      ...p,
+      ...svc.resources,
+      uid: 999,
+      public: false,
+      env: { ...p.env, ...env },
+    };
   } else {
     specs[name] = {
       image: svc.image,
@@ -100,8 +107,8 @@ for (const [name, svc] of Object.entries(template.services)) {
       startCommand: svc.startCommand,
       healthcheck: svc.healthcheck,
       uid: 10001,
-      memoryMiB: 256,
-      cpuMillicores: 250,
+      memoryMiB: svc.resources?.memoryMiB ?? 256,
+      cpuMillicores: svc.resources?.cpuMillicores ?? 250,
       public: svc.public,
       env,
     };
